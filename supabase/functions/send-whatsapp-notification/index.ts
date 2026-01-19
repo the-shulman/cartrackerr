@@ -36,18 +36,38 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error("Twilio credentials not configured. Please check TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, and TWILIO_WHATSAPP_FROM secrets.");
     }
 
-    // Normalize phone number - remove non-digits and ensure proper format
-    let toNumber = clientPhone.replace(/\D/g, "");
-    // If number doesn't start with country code, assume it needs one
-    if (toNumber.length === 10) {
-      toNumber = "1" + toNumber; // Default to US country code
+    // Normalize phone number into E.164 for WhatsApp
+    const rawPhone = (clientPhone || "").trim();
+    const digitsOnly = rawPhone.replace(/\D/g, "");
+
+    let toE164: string;
+    if (rawPhone.startsWith("+")) {
+      if (!digitsOnly) throw new Error("Client phone number is invalid");
+      toE164 = `+${digitsOnly}`;
+    } else if (digitsOnly.startsWith("00")) {
+      toE164 = `+${digitsOnly.slice(2)}`;
+    } else {
+      // Require country code to avoid sending to the wrong number
+      if (digitsOnly.length <= 10) {
+        throw new Error(
+          "Client phone must include country code (example: +52 55 1234 5678)."
+        );
+      }
+      toE164 = `+${digitsOnly}`;
     }
-    const formattedTo = `whatsapp:+${toNumber}`;
-    
+
+    const formattedTo = `whatsapp:${toE164}`;
+
     // Ensure from number is properly formatted
-    const formattedFrom = fromNumber.startsWith("whatsapp:") 
-      ? fromNumber 
+    const formattedFrom = fromNumber.startsWith("whatsapp:")
+      ? fromNumber
       : `whatsapp:${fromNumber.startsWith("+") ? fromNumber : "+" + fromNumber}`;
+
+    if (formattedTo === formattedFrom) {
+      throw new Error(
+        "Client phone number cannot be the same as the Twilio WhatsApp sender number."
+      );
+    }
 
     const message = `Hi ${clientName}! 🚗\n\nYour vehicle diagnostic report is ready:\n\n🚙 ${vehicleBrand} ${vehicleModel}\n📋 Plate: ${vehiclePlate}\n\nPlease review and approve the recommended services:\n${portalUrl}\n\nReply to this message if you have any questions!`;
 
