@@ -1,8 +1,8 @@
 import { ClientPortal } from './ClientPortal';
-import { useServices } from '@/hooks/useServices';
+import { useServicesContext } from '@/contexts/ServicesContext';
 
 export default function ClientPortalPage() {
-  const { services, approveServices } = useServices();
+  const { services, approveServices } = useServicesContext();
 
   return (
     <ClientPortal 
