@@ -213,7 +213,7 @@ export function DiagnosticReportDialog({ serviceId, service, onSubmit }: Diagnos
                         {priorityLabels[item.priority]}
                       </p>
                     </div>
-                    <p className="font-semibold">${item.price.toFixed(2)}</p>
+                    <p className="font-semibold">${item.price.toLocaleString('es-MX')} MXN</p>
                     <Button
                       type="button"
                       onClick={() => removeItem(item.id)}
@@ -227,7 +227,7 @@ export function DiagnosticReportDialog({ serviceId, service, onSubmit }: Diagnos
                 ))}
                 <div className="flex justify-between pt-4 font-semibold text-lg">
                   <span>Estimado Total:</span>
-                  <span>${totalEstimate.toFixed(2)}</span>
+                  <span>${totalEstimate.toLocaleString('es-MX')} MXN</span>
                 </div>
               </div>
             )}

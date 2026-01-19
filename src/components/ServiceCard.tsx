@@ -90,14 +90,13 @@ export function ServiceCard({ service, onStatusChange, onAddDiagnosticReport, on
                 .map(item => (
                   <div key={item.id} className="flex justify-between">
                     <span>{item.description}</span>
-                    <span className="font-medium">${item.price.toFixed(2)}</span>
+                    <span className="font-medium">${item.price.toLocaleString('es-MX')} MXN</span>
                   </div>
                 ))}
               <div className="flex justify-between pt-2 border-t border-status-ready/30 font-semibold">
                 <span>Total</span>
                 <span className="flex items-center gap-1">
-                  <DollarSign className="w-3 h-3" />
-                  {approvedTotal.toFixed(2)}
+                  ${approvedTotal.toLocaleString('es-MX')} MXN
                 </span>
               </div>
             </div>

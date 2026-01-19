@@ -201,7 +201,7 @@ export function ClientServiceView({ service, onApprove, onBack }: ClientServiceV
                         </div>
                       </div>
                       <span className="font-semibold text-sm whitespace-nowrap">
-                        ${item.price.toFixed(2)}
+                        ${item.price.toLocaleString('es-MX')} MXN
                       </span>
                     </div>
                   );
@@ -213,7 +213,7 @@ export function ClientServiceView({ service, onApprove, onBack }: ClientServiceV
             <div className="flex items-center justify-between p-4 rounded-lg bg-primary/5 border border-primary/20">
               <span className="font-medium">Total Seleccionado</span>
               <span className="text-2xl font-bold text-primary">
-                ${selectedTotal.toFixed(2)}
+                ${selectedTotal.toLocaleString('es-MX')} MXN
               </span>
             </div>
 
@@ -249,7 +249,7 @@ export function ClientServiceView({ service, onApprove, onBack }: ClientServiceV
                 disabled={selectedItems.length === 0}
               >
                 <CheckCircle2 className="h-4 w-4 mr-2" />
-                Aprobar Servicios Seleccionados (${selectedTotal.toFixed(2)})
+                Aprobar Servicios Seleccionados (${selectedTotal.toLocaleString('es-MX')} MXN)
               </Button>
             )}
           </CardContent>
