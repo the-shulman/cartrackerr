@@ -94,16 +94,21 @@ const handler = async (req: Request): Promise<Response> => {
     console.log("Twilio response:", responseText);
 
     if (!response.ok) {
-      // Try to parse as JSON first
+      const trimmed = responseText.trim();
+
+      // Try JSON first (Twilio can return JSON or XML depending on headers/errors)
       try {
-        const errorData = JSON.parse(responseText);
+        const errorData = JSON.parse(trimmed);
         console.error("Twilio API error:", errorData);
-        throw new Error(errorData.message || `Twilio error: ${errorData.code || response.status}`);
-      } catch (parseError) {
+        const msg = errorData.message || `Twilio error ${errorData.code || response.status}`;
+        throw new Error(msg);
+      } catch {
         // If not JSON, it's probably XML - extract error message
-        const messageMatch = responseText.match(/<Message>(.*?)<\/Message>/);
-        const errorMessage = messageMatch ? messageMatch[1] : `Twilio returned status ${response.status}`;
-        console.error("Twilio XML error:", errorMessage);
+        const messageMatch = trimmed.match(/<Message>(.*?)<\/Message>/);
+        const errorMessage = messageMatch
+          ? messageMatch[1]
+          : `Twilio error ${response.status}: ${trimmed.slice(0, 200)}`;
+        console.error("Twilio non-JSON error:", errorMessage);
         throw new Error(errorMessage);
       }
     }
