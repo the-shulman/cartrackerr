@@ -108,12 +108,12 @@ export function ClientApprovalDialog({ serviceId, vehicleInfo, report, onApprove
                       {item.priority === 'required' && ' - No se puede deseleccionar'}
                     </p>
                   </div>
-                  <p className="font-semibold">${item.price.toFixed(2)}</p>
+                  <p className="font-semibold">${item.price.toLocaleString('es-MX')} MXN</p>
                 </div>
               ))}
               <div className="flex justify-between pt-4 font-semibold text-lg border-t">
                 <span>Total Seleccionado:</span>
-                <span>${selectedTotal.toFixed(2)}</span>
+                <span>${selectedTotal.toLocaleString('es-MX')} MXN</span>
               </div>
             </div>
           </div>
@@ -140,7 +140,7 @@ export function ClientApprovalDialog({ serviceId, vehicleInfo, report, onApprove
             className="gap-2"
           >
             <CheckCircle className="w-4 h-4" />
-            Aprobar Selección (${selectedTotal.toFixed(2)})
+            Aprobar Selección (${selectedTotal.toLocaleString('es-MX')} MXN)
           </Button>
         </div>
       </DialogContent>
