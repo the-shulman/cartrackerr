@@ -59,48 +59,48 @@ export function SettingsDialog({ branding, onUpdate, onReset }: SettingsDialogPr
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Workshop Branding</DialogTitle>
+          <DialogTitle>Marca del Taller</DialogTitle>
           <DialogDescription>
-            Customize your workshop's name and branding
+            Personaliza el nombre y marca de tu taller
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4 py-4">
           <div className="space-y-2">
-            <Label htmlFor="workshopName">Workshop Name</Label>
+            <Label htmlFor="workshopName">Nombre del Taller</Label>
             <Input
               id="workshopName"
               value={workshopName}
               onChange={(e) => setWorkshopName(e.target.value)}
-              placeholder="Your Workshop Name"
+              placeholder="Nombre de tu Taller"
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="tagline">Tagline</Label>
+            <Label htmlFor="tagline">Eslogan</Label>
             <Input
               id="tagline"
               value={tagline}
               onChange={(e) => setTagline(e.target.value)}
-              placeholder="Your tagline"
+              placeholder="Tu eslogan"
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="logoUrl">Logo URL (optional)</Label>
+            <Label htmlFor="logoUrl">URL del Logo (opcional)</Label>
             <Input
               id="logoUrl"
               value={logoUrl}
               onChange={(e) => setLogoUrl(e.target.value)}
-              placeholder="https://example.com/logo.png"
+              placeholder="https://ejemplo.com/logo.png"
             />
             <p className="text-xs text-muted-foreground">
-              Enter a URL to your logo image. Leave empty to use the default icon.
+              Ingresa la URL de tu logo. Deja vacío para usar el ícono predeterminado.
             </p>
           </div>
         </div>
         <div className="flex justify-between">
           <Button variant="outline" onClick={handleReset}>
-            Reset to Default
+            Restablecer
           </Button>
-          <Button onClick={handleSave}>Save Changes</Button>
+          <Button onClick={handleSave}>Guardar Cambios</Button>
         </div>
       </DialogContent>
     </Dialog>

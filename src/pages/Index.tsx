@@ -39,25 +39,25 @@ const Index = () => {
         {/* Stats Overview */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
           <StatsCard 
-            title="Received" 
+            title="Recibidos" 
             value={counts.received} 
             icon={Inbox} 
             color="received" 
           />
           <StatsCard 
-            title="Diagnosing" 
+            title="Diagnosticando" 
             value={counts.diagnosing} 
             icon={Search} 
             color="diagnosing" 
           />
           <StatsCard 
-            title="In Progress" 
+            title="En Progreso" 
             value={counts.in_progress} 
             icon={Wrench} 
             color="progress" 
           />
           <StatsCard 
-            title="Ready" 
+            title="Listos" 
             value={counts.ready} 
             icon={CheckCircle} 
             color="ready" 
@@ -77,7 +77,7 @@ const Index = () => {
             <div className="relative flex-1 sm:flex-none">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
-                placeholder="Search services..."
+                placeholder="Buscar servicios..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-9 w-full sm:w-64"
@@ -105,9 +105,9 @@ const Index = () => {
             <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
               <Wrench className="w-8 h-8 text-muted-foreground" />
             </div>
-            <h3 className="text-lg font-medium mb-2">No services found</h3>
+            <h3 className="text-lg font-medium mb-2">No se encontraron servicios</h3>
             <p className="text-muted-foreground">
-              {searchQuery ? "Try a different search term" : "Add a new service to get started"}
+              {searchQuery ? "Intenta con un término diferente" : "Agrega un nuevo servicio para comenzar"}
             </p>
           </div>
         )}

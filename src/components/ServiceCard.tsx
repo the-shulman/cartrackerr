@@ -82,7 +82,7 @@ export function ServiceCard({ service, onStatusChange, onAddDiagnosticReport, on
           <div className="bg-status-ready/10 border border-status-ready/30 p-3 rounded-lg">
             <div className="flex items-center gap-2 mb-2">
               <CheckCircle2 className="w-4 h-4 text-status-ready" />
-              <span className="font-medium text-sm">Approved Services</span>
+              <span className="font-medium text-sm">Servicios Aprobados</span>
             </div>
             <div className="text-sm space-y-1">
               {service.diagnosticReport.items
@@ -137,7 +137,7 @@ export function ServiceCard({ service, onStatusChange, onAddDiagnosticReport, on
                 onClick={() => onStatusChange(service.id, getNextStatus())}
                 className="flex-1 py-2 px-4 text-sm font-medium rounded-lg gradient-accent text-accent-foreground hover:opacity-90 transition-opacity"
               >
-                Advance Status
+                Avanzar Estado
               </button>
             )}
           </div>

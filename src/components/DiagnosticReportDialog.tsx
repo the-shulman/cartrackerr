@@ -99,8 +99,8 @@ export function DiagnosticReportDialog({ serviceId, service, onSubmit }: Diagnos
         if (sendNotification) {
           await sendWhatsAppNotification();
           toast({
-            title: "Notification sent!",
-            description: `WhatsApp message sent to ${service.clientName}`,
+            title: "¡Notificación enviada!",
+            description: `Mensaje de WhatsApp enviado a ${service.clientName}`,
           });
         }
 
@@ -110,10 +110,10 @@ export function DiagnosticReportDialog({ serviceId, service, onSubmit }: Diagnos
       } catch (error: any) {
         console.error("Error:", error);
         toast({
-          title: "Report saved",
+          title: "Reporte guardado",
           description: sendNotification 
-            ? "Report saved but WhatsApp notification failed. Client can still access the portal." 
-            : "Diagnostic report sent for approval.",
+            ? "El reporte se guardó pero falló la notificación de WhatsApp. El cliente puede acceder al portal." 
+            : "Reporte diagnóstico enviado para aprobación.",
           variant: sendNotification ? "destructive" : "default",
         });
         setOpen(false);
@@ -128,9 +128,9 @@ export function DiagnosticReportDialog({ serviceId, service, onSubmit }: Diagnos
   const totalEstimate = items.reduce((sum, item) => sum + item.price, 0);
 
   const priorityLabels = {
-    required: "Required",
-    recommended: "Recommended",
-    optional: "Optional",
+    required: "Requerido",
+    recommended: "Recomendado",
+    optional: "Opcional",
   };
 
   const priorityColors = {
@@ -144,42 +144,42 @@ export function DiagnosticReportDialog({ serviceId, service, onSubmit }: Diagnos
       <DialogTrigger asChild>
         <Button size="sm" variant="secondary" className="gap-2">
           <ClipboardList className="w-4 h-4" />
-          Add Report
+          Agregar Reporte
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Diagnostic Report</DialogTitle>
+          <DialogTitle>Reporte de Diagnóstico</DialogTitle>
           <DialogDescription>
-            Add diagnostic findings and service items for {vehicleInfo}
+            Agregar hallazgos y servicios para {vehicleInfo}
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-6 py-4">
           <div className="space-y-2">
-            <Label htmlFor="findings">Diagnostic Findings</Label>
+            <Label htmlFor="findings">Hallazgos del Diagnóstico</Label>
             <Textarea
               id="findings"
               value={findings}
               onChange={(e) => setFindings(e.target.value)}
-              placeholder="Describe what was found during diagnosis..."
+              placeholder="Describe lo que se encontró durante el diagnóstico..."
               rows={4}
             />
           </div>
 
           <div className="space-y-4">
-            <Label>Service Items & Pricing</Label>
+            <Label>Servicios y Precios</Label>
             
             {/* Add new item */}
             <div className="flex gap-2 flex-wrap sm:flex-nowrap">
               <Input
-                placeholder="Service description"
+                placeholder="Descripción del servicio"
                 value={newItem.description}
                 onChange={(e) => setNewItem({ ...newItem, description: e.target.value })}
                 className="flex-1"
               />
               <Input
                 type="number"
-                placeholder="Price"
+                placeholder="Precio"
                 value={newItem.price}
                 onChange={(e) => setNewItem({ ...newItem, price: e.target.value })}
                 className="w-24"
@@ -192,9 +192,9 @@ export function DiagnosticReportDialog({ serviceId, service, onSubmit }: Diagnos
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="required">Required</SelectItem>
-                  <SelectItem value="recommended">Recommended</SelectItem>
-                  <SelectItem value="optional">Optional</SelectItem>
+                  <SelectItem value="required">Requerido</SelectItem>
+                  <SelectItem value="recommended">Recomendado</SelectItem>
+                  <SelectItem value="optional">Opcional</SelectItem>
                 </SelectContent>
               </Select>
               <Button type="button" onClick={addItem} size="icon" variant="outline">
@@ -226,7 +226,7 @@ export function DiagnosticReportDialog({ serviceId, service, onSubmit }: Diagnos
                   </div>
                 ))}
                 <div className="flex justify-between pt-4 font-semibold text-lg">
-                  <span>Total Estimate:</span>
+                  <span>Estimado Total:</span>
                   <span>${totalEstimate.toFixed(2)}</span>
                 </div>
               </div>
@@ -242,11 +242,11 @@ export function DiagnosticReportDialog({ serviceId, service, onSubmit }: Diagnos
             />
             <div className="flex-1">
               <Label htmlFor="send-notification" className="cursor-pointer font-medium flex items-center gap-2">
-                <Send className="w-4 h-4 text-green-600" />
-                Send WhatsApp notification
+                <Send className="w-4 h-4 text-status-ready" />
+                Enviar notificación por WhatsApp
               </Label>
               <p className="text-sm text-muted-foreground">
-                Notify {service.clientName} via WhatsApp with a link to approve services
+                Notificar a {service.clientName} por WhatsApp con un enlace para aprobar los servicios
               </p>
             </div>
           </div>
@@ -254,7 +254,7 @@ export function DiagnosticReportDialog({ serviceId, service, onSubmit }: Diagnos
 
         <div className="flex justify-end gap-2">
           <Button variant="outline" onClick={() => setOpen(false)} disabled={isSending}>
-            Cancel
+            Cancelar
           </Button>
           <Button 
             onClick={handleSubmit}
@@ -263,12 +263,12 @@ export function DiagnosticReportDialog({ serviceId, service, onSubmit }: Diagnos
             {isSending ? (
               <>
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                Sending...
+                Enviando...
               </>
             ) : (
               <>
                 {sendNotification && <Send className="w-4 h-4 mr-2" />}
-                Send for Approval
+                Enviar para Aprobación
               </>
             )}
           </Button>

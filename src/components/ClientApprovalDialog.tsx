@@ -53,9 +53,9 @@ export function ClientApprovalDialog({ serviceId, vehicleInfo, report, onApprove
     .reduce((sum, item) => sum + item.price, 0);
 
   const priorityLabels = {
-    required: "Required",
-    recommended: "Recommended",
-    optional: "Optional",
+    required: "Requerido",
+    recommended: "Recomendado",
+    optional: "Opcional",
   };
 
   const priorityColors = {
@@ -69,27 +69,27 @@ export function ClientApprovalDialog({ serviceId, vehicleInfo, report, onApprove
       <DialogTrigger asChild>
         <Button size="sm" className="gap-2 gradient-accent text-accent-foreground">
           <FileText className="w-4 h-4" />
-          View Report
+          Ver Reporte
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Diagnostic Report</DialogTitle>
+          <DialogTitle>Reporte de Diagnóstico</DialogTitle>
           <DialogDescription>
-            Review findings and select services for {vehicleInfo}
+            Revisar hallazgos y seleccionar servicios para {vehicleInfo}
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-6 py-4">
           <div className="bg-muted/50 p-4 rounded-lg">
             <p className="text-sm text-muted-foreground mb-1">
-              Report created: {format(report.createdAt, 'MMM d, yyyy h:mm a')}
+              Reporte creado: {format(report.createdAt, 'dd/MM/yyyy h:mm a')}
             </p>
-            <h4 className="font-medium mb-2">Findings:</h4>
+            <h4 className="font-medium mb-2">Hallazgos:</h4>
             <p className="text-sm">{report.findings}</p>
           </div>
 
           <div className="space-y-4">
-            <Label>Select Services to Approve</Label>
+            <Label>Seleccionar Servicios a Aprobar</Label>
             <div className="space-y-2 border rounded-lg p-4">
               {report.items.map((item) => (
                 <div key={item.id} className="flex items-start gap-4 py-3 border-b last:border-0">
@@ -105,26 +105,26 @@ export function ClientApprovalDialog({ serviceId, vehicleInfo, report, onApprove
                     </Label>
                     <p className={`text-sm ${priorityColors[item.priority]}`}>
                       {priorityLabels[item.priority]}
-                      {item.priority === 'required' && ' - Cannot be deselected'}
+                      {item.priority === 'required' && ' - No se puede deseleccionar'}
                     </p>
                   </div>
                   <p className="font-semibold">${item.price.toFixed(2)}</p>
                 </div>
               ))}
               <div className="flex justify-between pt-4 font-semibold text-lg border-t">
-                <span>Selected Total:</span>
+                <span>Total Seleccionado:</span>
                 <span>${selectedTotal.toFixed(2)}</span>
               </div>
             </div>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="clientNotes">Additional Notes (Optional)</Label>
+            <Label htmlFor="clientNotes">Notas Adicionales (Opcional)</Label>
             <Textarea
               id="clientNotes"
               value={clientNotes}
               onChange={(e) => setClientNotes(e.target.value)}
-              placeholder="Any additional comments or requests..."
+              placeholder="Comentarios o solicitudes adicionales..."
               rows={3}
             />
           </div>
@@ -132,7 +132,7 @@ export function ClientApprovalDialog({ serviceId, vehicleInfo, report, onApprove
 
         <div className="flex justify-end gap-2">
           <Button variant="outline" onClick={() => setOpen(false)}>
-            Cancel
+            Cancelar
           </Button>
           <Button 
             onClick={handleApprove}
@@ -140,7 +140,7 @@ export function ClientApprovalDialog({ serviceId, vehicleInfo, report, onApprove
             className="gap-2"
           >
             <CheckCircle className="w-4 h-4" />
-            Approve Selected (${selectedTotal.toFixed(2)})
+            Aprobar Selección (${selectedTotal.toFixed(2)})
           </Button>
         </div>
       </DialogContent>
