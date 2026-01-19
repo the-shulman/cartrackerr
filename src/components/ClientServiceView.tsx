@@ -56,23 +56,23 @@ export function ClientServiceView({ service, onApprove, onBack }: ClientServiceV
   };
 
   return (
-    <div className="max-w-2xl mx-auto space-y-6">
-      <Button variant="ghost" onClick={onBack} className="mb-4">
+    <div className="max-w-2xl mx-auto space-y-4 md:space-y-6 pb-6">
+      <Button variant="ghost" onClick={onBack} className="mb-2 md:mb-4 -ml-2">
         <ArrowLeft className="h-4 w-4 mr-2" />
         Back to Search
       </Button>
 
       {/* Vehicle Info Card */}
       <Card>
-        <CardHeader>
-          <div className="flex items-start justify-between">
+        <CardHeader className="p-4 md:p-6">
+          <div className="flex flex-col sm:flex-row sm:items-start gap-3 sm:justify-between">
             <div className="flex items-center gap-3">
-              <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center">
-                <Car className="h-6 w-6 text-primary" />
+              <div className="h-10 w-10 md:h-12 md:w-12 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                <Car className="h-5 w-5 md:h-6 md:w-6 text-primary" />
               </div>
-              <div>
-                <CardTitle>{service.vehicleBrand} {service.vehicleModel}</CardTitle>
-                <CardDescription className="flex items-center gap-2 mt-1">
+              <div className="min-w-0">
+                <CardTitle className="text-base md:text-lg truncate">{service.vehicleBrand} {service.vehicleModel}</CardTitle>
+                <CardDescription className="flex items-center gap-2 mt-1 text-sm">
                   <span className="font-mono font-semibold">{service.vehiclePlate}</span>
                   <span className="text-muted-foreground">• {service.vehicleYear}</span>
                 </CardDescription>

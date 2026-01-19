@@ -63,36 +63,36 @@ export function ClientPortal({ services, onApproveServices }: ClientPortalProps)
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background to-muted/30">
+    <div className="min-h-screen bg-gradient-to-br from-background to-muted/30 flex flex-col">
       <header className="border-b bg-card/80 backdrop-blur-sm sticky top-0 z-10">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center gap-3">
+        <div className="container mx-auto px-4 py-3 md:py-4">
+          <div className="flex items-center gap-2 md:gap-3">
             {branding.logoUrl ? (
-              <img src={branding.logoUrl} alt={branding.workshopName} className="h-10 w-10 object-contain" />
+              <img src={branding.logoUrl} alt={branding.workshopName} className="h-8 w-8 md:h-10 md:w-10 object-contain flex-shrink-0" />
             ) : (
-              <div className="h-10 w-10 rounded-lg bg-primary flex items-center justify-center">
-                <Car className="h-6 w-6 text-primary-foreground" />
+              <div className="h-8 w-8 md:h-10 md:w-10 rounded-lg bg-primary flex items-center justify-center flex-shrink-0">
+                <Car className="h-5 w-5 md:h-6 md:w-6 text-primary-foreground" />
               </div>
             )}
-            <div>
-              <h1 className="text-xl font-bold">{branding.workshopName}</h1>
-              <p className="text-sm text-muted-foreground">Service Status Portal</p>
+            <div className="min-w-0">
+              <h1 className="text-lg md:text-xl font-bold truncate">{branding.workshopName}</h1>
+              <p className="text-xs md:text-sm text-muted-foreground">Service Status Portal</p>
             </div>
           </div>
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-8">
+      <main className="container mx-auto px-4 py-6 md:py-8 flex-1">
         {!foundService ? (
           <div className="max-w-md mx-auto">
             <Card>
-              <CardHeader className="text-center">
-                <CardTitle className="text-2xl">Track Your Service</CardTitle>
-                <CardDescription>
+              <CardHeader className="text-center px-4 md:px-6">
+                <CardTitle className="text-xl md:text-2xl">Track Your Service</CardTitle>
+                <CardDescription className="text-sm">
                   Enter your phone number and license plate to view your vehicle's service status
                 </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-4 px-4 md:px-6">
                 <div className="space-y-2">
                   <Label htmlFor="phone" className="flex items-center gap-2">
                     <Phone className="h-4 w-4" />
