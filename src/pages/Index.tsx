@@ -5,12 +5,14 @@ import { AddServiceDialog } from "@/components/AddServiceDialog";
 import { StatsCard } from "@/components/StatsCard";
 import { FilterTabs } from "@/components/FilterTabs";
 import { useServices } from "@/hooks/useServices";
+import { useBranding } from "@/hooks/useBranding";
 import { ServiceStatus } from "@/types/service";
 import { Inbox, Search, Wrench, CheckCircle } from "lucide-react";
 import { Input } from "@/components/ui/input";
 
 const Index = () => {
   const { services, addService, updateStatus, getCounts } = useServices();
+  const { branding, updateBranding, resetBranding } = useBranding();
   const [activeFilter, setActiveFilter] = useState<ServiceStatus | 'all'>('all');
   const [searchQuery, setSearchQuery] = useState("");
   const counts = getCounts();
@@ -27,7 +29,11 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <Header />
+      <Header 
+        branding={branding} 
+        onUpdateBranding={updateBranding} 
+        onResetBranding={resetBranding} 
+      />
       
       <main className="container mx-auto px-4 py-8">
         {/* Stats Overview */}
