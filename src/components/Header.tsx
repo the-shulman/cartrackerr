@@ -10,23 +10,23 @@ interface HeaderProps {
 
 export function Header({ branding, onUpdateBranding, onResetBranding }: HeaderProps) {
   return (
-    <header className="gradient-hero text-primary-foreground py-6 px-6 shadow-elevated">
-      <div className="container mx-auto flex items-center justify-between">
-        <div className="flex items-center gap-3">
+    <header className="gradient-hero text-primary-foreground py-4 md:py-6 px-4 md:px-6 shadow-elevated">
+      <div className="container mx-auto flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2 md:gap-3 min-w-0">
           {branding.logoUrl ? (
             <img 
               src={branding.logoUrl} 
               alt={branding.workshopName} 
-              className="w-10 h-10 rounded-lg object-contain bg-accent p-1"
+              className="w-8 h-8 md:w-10 md:h-10 rounded-lg object-contain bg-accent p-1 flex-shrink-0"
             />
           ) : (
-            <div className="p-2 bg-accent rounded-lg">
-              <Wrench className="w-6 h-6 text-accent-foreground" />
+            <div className="p-1.5 md:p-2 bg-accent rounded-lg flex-shrink-0">
+              <Wrench className="w-5 h-5 md:w-6 md:h-6 text-accent-foreground" />
             </div>
           )}
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight">{branding.workshopName}</h1>
-            <p className="text-sm text-primary-foreground/70">{branding.tagline}</p>
+          <div className="min-w-0">
+            <h1 className="text-lg md:text-2xl font-bold tracking-tight truncate">{branding.workshopName}</h1>
+            <p className="text-xs md:text-sm text-primary-foreground/70 truncate">{branding.tagline}</p>
           </div>
         </div>
         <SettingsDialog 

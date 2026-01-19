@@ -65,22 +65,22 @@ const Index = () => {
         </div>
 
         {/* Toolbar */}
-        <div className="flex flex-col md:flex-row gap-4 mb-6">
-          <div className="flex-1">
+        <div className="flex flex-col gap-4 mb-6">
+          <div className="w-full overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0">
             <FilterTabs 
               activeFilter={activeFilter} 
               onFilterChange={setActiveFilter}
               counts={counts}
             />
           </div>
-          <div className="flex gap-3">
-            <div className="relative">
+          <div className="flex flex-col sm:flex-row gap-3">
+            <div className="relative flex-1 sm:flex-none">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
                 placeholder="Search services..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9 w-full md:w-64"
+                className="pl-9 w-full sm:w-64"
               />
             </div>
             <AddServiceDialog onAdd={addService} />
