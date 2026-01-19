@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -17,9 +17,15 @@ export function ClientPortal({ services, onApproveServices }: ClientPortalProps)
   const { branding } = useBranding();
   const [phone, setPhone] = useState('');
   const [plate, setPlate] = useState('');
-  const [foundService, setFoundService] = useState<Service | null>(null);
+  const [foundServiceId, setFoundServiceId] = useState<string | null>(null);
   const [searched, setSearched] = useState(false);
   const [error, setError] = useState('');
+
+  // Derive the current service from the services array to keep it reactive
+  const foundService = useMemo(() => {
+    if (!foundServiceId) return null;
+    return services.find(s => s.id === foundServiceId) || null;
+  }, [foundServiceId, services]);
 
   const handleSearch = () => {
     setError('');
@@ -30,32 +36,26 @@ export function ClientPortal({ services, onApproveServices }: ClientPortalProps)
 
     if (!normalizedPhone || !normalizedPlate) {
       setError('Please enter both phone number and license plate');
-      setFoundService(null);
+      setFoundServiceId(null);
       return;
     }
 
     const service = services.find(s => {
       const servicePhone = s.clientPhone.replace(/\D/g, '');
       const servicePlate = s.vehiclePlate.toUpperCase().replace(/[^A-Z0-9]/g, '');
-      return servicePhone.includes(normalizedPhone) || normalizedPhone.includes(servicePhone);
-    })?.vehiclePlate.toUpperCase().replace(/[^A-Z0-9]/g, '') === normalizedPlate
-      ? services.find(s => {
-          const servicePhone = s.clientPhone.replace(/\D/g, '');
-          const servicePlate = s.vehiclePlate.toUpperCase().replace(/[^A-Z0-9]/g, '');
-          return (servicePhone.includes(normalizedPhone) || normalizedPhone.includes(servicePhone)) && servicePlate === normalizedPlate;
-        })
-      : null;
+      return (servicePhone.includes(normalizedPhone) || normalizedPhone.includes(servicePhone)) && servicePlate === normalizedPlate;
+    });
 
     if (service) {
-      setFoundService(service);
+      setFoundServiceId(service.id);
     } else {
-      setFoundService(null);
+      setFoundServiceId(null);
       setError('No service found with the provided phone number and license plate');
     }
   };
 
   const handleBack = () => {
-    setFoundService(null);
+    setFoundServiceId(null);
     setSearched(false);
     setPhone('');
     setPlate('');
