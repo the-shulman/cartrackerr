@@ -34,12 +34,12 @@ export interface Service {
 }
 
 export const STATUS_LABELS: Record<ServiceStatus, string> = {
-  received: 'Received',
-  diagnosing: 'Diagnosing',
-  awaiting_approval: 'Awaiting Approval',
-  in_progress: 'In Progress',
-  ready: 'Ready for Pickup',
-  delivered: 'Delivered',
+  received: 'Recibido',
+  diagnosing: 'Diagnosticando',
+  awaiting_approval: 'Esperando Aprobación',
+  in_progress: 'En Progreso',
+  ready: 'Listo para Recoger',
+  delivered: 'Entregado',
 };
 
 export const STATUS_ORDER: ServiceStatus[] = [

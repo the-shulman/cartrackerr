@@ -35,7 +35,7 @@ export function ClientPortal({ services, onApproveServices }: ClientPortalProps)
     const normalizedPlate = plate.toUpperCase().replace(/[^A-Z0-9]/g, '');
 
     if (!normalizedPhone || !normalizedPlate) {
-      setError('Please enter both phone number and license plate');
+      setError('Por favor ingresa tu número de teléfono y placas');
       setFoundServiceId(null);
       return;
     }
@@ -50,7 +50,7 @@ export function ClientPortal({ services, onApproveServices }: ClientPortalProps)
       setFoundServiceId(service.id);
     } else {
       setFoundServiceId(null);
-      setError('No service found with the provided phone number and license plate');
+      setError('No se encontró ningún servicio con el número de teléfono y placas proporcionados');
     }
   };
 
@@ -76,7 +76,7 @@ export function ClientPortal({ services, onApproveServices }: ClientPortalProps)
             )}
             <div className="min-w-0">
               <h1 className="text-lg md:text-xl font-bold truncate">{branding.workshopName}</h1>
-              <p className="text-xs md:text-sm text-muted-foreground">Service Status Portal</p>
+              <p className="text-xs md:text-sm text-muted-foreground">Portal de Estado de Servicio</p>
             </div>
           </div>
         </div>
@@ -87,21 +87,21 @@ export function ClientPortal({ services, onApproveServices }: ClientPortalProps)
           <div className="max-w-md mx-auto">
             <Card>
               <CardHeader className="text-center px-4 md:px-6">
-                <CardTitle className="text-xl md:text-2xl">Track Your Service</CardTitle>
+                <CardTitle className="text-xl md:text-2xl">Rastrea tu Servicio</CardTitle>
                 <CardDescription className="text-sm">
-                  Enter your phone number and license plate to view your vehicle's service status
+                  Ingresa tu número de teléfono y placas para ver el estado del servicio de tu vehículo
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4 px-4 md:px-6">
                 <div className="space-y-2">
                   <Label htmlFor="phone" className="flex items-center gap-2">
                     <Phone className="h-4 w-4" />
-                    Phone Number
+                    Número de Teléfono
                   </Label>
                   <Input
                     id="phone"
                     type="tel"
-                    placeholder="Enter your phone number"
+                    placeholder="Ingresa tu número de teléfono"
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
@@ -111,11 +111,11 @@ export function ClientPortal({ services, onApproveServices }: ClientPortalProps)
                 <div className="space-y-2">
                   <Label htmlFor="plate" className="flex items-center gap-2">
                     <Car className="h-4 w-4" />
-                    License Plate
+                    Placas
                   </Label>
                   <Input
                     id="plate"
-                    placeholder="Enter your license plate"
+                    placeholder="Ingresa tus placas"
                     value={plate}
                     onChange={(e) => setPlate(e.target.value.toUpperCase())}
                     onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
@@ -128,7 +128,7 @@ export function ClientPortal({ services, onApproveServices }: ClientPortalProps)
 
                 <Button onClick={handleSearch} className="w-full" size="lg">
                   <Search className="h-4 w-4 mr-2" />
-                  Find My Vehicle
+                  Buscar Mi Vehículo
                 </Button>
               </CardContent>
             </Card>
@@ -144,7 +144,7 @@ export function ClientPortal({ services, onApproveServices }: ClientPortalProps)
 
       <footer className="border-t bg-card/50 mt-auto">
         <div className="container mx-auto px-4 py-4 text-center text-sm text-muted-foreground">
-          © {new Date().getFullYear()} {branding.workshopName}. All rights reserved.
+          © {new Date().getFullYear()} {branding.workshopName}. Todos los derechos reservados.
         </div>
       </footer>
     </div>

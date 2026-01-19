@@ -23,7 +23,7 @@ export function FilterTabs({ activeFilter, onFilterChange, counts }: FilterTabsP
               : "bg-card text-muted-foreground hover:bg-muted"
           )}
         >
-          {filter === 'all' ? 'All Services' : STATUS_LABELS[filter]}
+          {filter === 'all' ? 'Todos los Servicios' : STATUS_LABELS[filter]}
           <span className={cn(
             "ml-2 px-2 py-0.5 rounded-full text-xs",
             activeFilter === filter 
