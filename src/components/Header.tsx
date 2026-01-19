@@ -1,6 +1,10 @@
-import { Wrench } from "lucide-react";
+import { Wrench, LogOut } from "lucide-react";
 import { BrandingConfig } from "@/types/branding";
 import { SettingsDialog } from "@/components/SettingsDialog";
+import { Button } from "@/components/ui/button";
+import { useAuthContext } from "@/contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 
 interface HeaderProps {
   branding: BrandingConfig;
@@ -9,6 +13,19 @@ interface HeaderProps {
 }
 
 export function Header({ branding, onUpdateBranding, onResetBranding }: HeaderProps) {
+  const { signOut, user } = useAuthContext();
+  const navigate = useNavigate();
+
+  const handleSignOut = async () => {
+    const { error } = await signOut();
+    if (error) {
+      toast.error("Error al cerrar sesión");
+      return;
+    }
+    toast.success("Sesión cerrada");
+    navigate("/login");
+  };
+
   return (
     <header className="gradient-hero text-primary-foreground py-4 md:py-6 px-4 md:px-6 shadow-elevated">
       <div className="container mx-auto flex items-center justify-between gap-2">
@@ -29,11 +46,24 @@ export function Header({ branding, onUpdateBranding, onResetBranding }: HeaderPr
             <p className="text-xs md:text-sm text-primary-foreground/70 truncate">{branding.tagline}</p>
           </div>
         </div>
-        <SettingsDialog 
-          branding={branding} 
-          onUpdate={onUpdateBranding} 
-          onReset={onResetBranding} 
-        />
+        <div className="flex items-center gap-2">
+          <SettingsDialog 
+            branding={branding} 
+            onUpdate={onUpdateBranding} 
+            onReset={onResetBranding} 
+          />
+          {user && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleSignOut}
+              className="text-primary-foreground hover:bg-primary-foreground/10"
+              title="Cerrar Sesión"
+            >
+              <LogOut className="w-5 h-5" />
+            </Button>
+          )}
+        </div>
       </div>
     </header>
   );
