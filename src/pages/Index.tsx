@@ -4,14 +4,14 @@ import { ServiceCard } from "@/components/ServiceCard";
 import { AddServiceDialog } from "@/components/AddServiceDialog";
 import { StatsCard } from "@/components/StatsCard";
 import { FilterTabs } from "@/components/FilterTabs";
-import { useServices } from "@/hooks/useServices";
+import { useServicesContext } from "@/contexts/ServicesContext";
 import { useBranding } from "@/hooks/useBranding";
 import { ServiceStatus } from "@/types/service";
 import { Inbox, Search, Wrench, CheckCircle } from "lucide-react";
 import { Input } from "@/components/ui/input";
 
 const Index = () => {
-  const { services, addService, updateStatus, addDiagnosticReport, approveServices, getCounts } = useServices();
+  const { services, addService, updateStatus, addDiagnosticReport, approveServices, getCounts } = useServicesContext();
   const { branding, updateBranding, resetBranding } = useBranding();
   const [activeFilter, setActiveFilter] = useState<ServiceStatus | 'all'>('all');
   const [searchQuery, setSearchQuery] = useState("");
