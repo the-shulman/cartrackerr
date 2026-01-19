@@ -28,17 +28,32 @@ const handler = async (req: Request): Promise<Response> => {
     const fromNumber = Deno.env.get("TWILIO_WHATSAPP_FROM");
 
     if (!accountSid || !authToken || !fromNumber) {
-      throw new Error("Twilio credentials not configured");
+      console.error("Missing Twilio credentials:", { 
+        hasAccountSid: !!accountSid, 
+        hasAuthToken: !!authToken, 
+        hasFromNumber: !!fromNumber 
+      });
+      throw new Error("Twilio credentials not configured. Please check TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, and TWILIO_WHATSAPP_FROM secrets.");
     }
 
-    // Normalize phone number - ensure it starts with whatsapp:
-    const toNumber = clientPhone.replace(/\D/g, "");
-    const formattedTo = `whatsapp:+${toNumber.startsWith("1") ? toNumber : "1" + toNumber}`;
-    const formattedFrom = fromNumber.startsWith("whatsapp:") ? fromNumber : `whatsapp:${fromNumber}`;
+    // Normalize phone number - remove non-digits and ensure proper format
+    let toNumber = clientPhone.replace(/\D/g, "");
+    // If number doesn't start with country code, assume it needs one
+    if (toNumber.length === 10) {
+      toNumber = "1" + toNumber; // Default to US country code
+    }
+    const formattedTo = `whatsapp:+${toNumber}`;
+    
+    // Ensure from number is properly formatted
+    const formattedFrom = fromNumber.startsWith("whatsapp:") 
+      ? fromNumber 
+      : `whatsapp:${fromNumber.startsWith("+") ? fromNumber : "+" + fromNumber}`;
 
     const message = `Hi ${clientName}! 🚗\n\nYour vehicle diagnostic report is ready:\n\n🚙 ${vehicleBrand} ${vehicleModel}\n📋 Plate: ${vehiclePlate}\n\nPlease review and approve the recommended services:\n${portalUrl}\n\nReply to this message if you have any questions!`;
 
     const twilioUrl = `https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`;
+
+    console.log("Sending WhatsApp message:", { to: formattedTo, from: formattedFrom });
 
     const response = await fetch(twilioUrl, {
       method: "POST",
@@ -53,11 +68,32 @@ const handler = async (req: Request): Promise<Response> => {
       }),
     });
 
-    const result = await response.json();
+    // Get response text first to handle both JSON and XML responses
+    const responseText = await response.text();
+    console.log("Twilio response status:", response.status);
+    console.log("Twilio response:", responseText);
 
     if (!response.ok) {
-      console.error("Twilio error:", result);
-      throw new Error(result.message || "Failed to send WhatsApp message");
+      // Try to parse as JSON first
+      try {
+        const errorData = JSON.parse(responseText);
+        console.error("Twilio API error:", errorData);
+        throw new Error(errorData.message || `Twilio error: ${errorData.code || response.status}`);
+      } catch (parseError) {
+        // If not JSON, it's probably XML - extract error message
+        const messageMatch = responseText.match(/<Message>(.*?)<\/Message>/);
+        const errorMessage = messageMatch ? messageMatch[1] : `Twilio returned status ${response.status}`;
+        console.error("Twilio XML error:", errorMessage);
+        throw new Error(errorMessage);
+      }
+    }
+
+    // Parse successful response
+    let result;
+    try {
+      result = JSON.parse(responseText);
+    } catch {
+      result = { sid: "unknown", status: "sent" };
     }
 
     console.log("WhatsApp message sent successfully:", result.sid);
@@ -70,7 +106,7 @@ const handler = async (req: Request): Promise<Response> => {
       }
     );
   } catch (error: any) {
-    console.error("Error sending WhatsApp notification:", error);
+    console.error("Error sending WhatsApp notification:", error.message);
     return new Response(
       JSON.stringify({ error: error.message }),
       {
