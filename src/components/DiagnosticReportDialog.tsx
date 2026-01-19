@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ClipboardList, Plus, Trash2 } from "lucide-react";
+import { ClipboardList, Plus, Trash2, Send, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -19,19 +19,27 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { DiagnosticItem, DiagnosticReport } from "@/types/service";
+import { Checkbox } from "@/components/ui/checkbox";
+import { DiagnosticItem, DiagnosticReport, Service } from "@/types/service";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 interface DiagnosticReportDialogProps {
   serviceId: string;
-  vehicleInfo: string;
+  service: Service;
   onSubmit: (serviceId: string, report: DiagnosticReport) => void;
 }
 
-export function DiagnosticReportDialog({ serviceId, vehicleInfo, onSubmit }: DiagnosticReportDialogProps) {
+export function DiagnosticReportDialog({ serviceId, service, onSubmit }: DiagnosticReportDialogProps) {
   const [open, setOpen] = useState(false);
   const [findings, setFindings] = useState("");
   const [items, setItems] = useState<DiagnosticItem[]>([]);
   const [newItem, setNewItem] = useState({ description: "", price: "", priority: "recommended" as DiagnosticItem['priority'] });
+  const [sendNotification, setSendNotification] = useState(true);
+  const [isSending, setIsSending] = useState(false);
+  const { toast } = useToast();
+
+  const vehicleInfo = `${service.vehicleBrand} ${service.vehicleModel} (${service.vehiclePlate})`;
 
   const addItem = () => {
     if (newItem.description.trim() && newItem.price) {
@@ -53,16 +61,67 @@ export function DiagnosticReportDialog({ serviceId, vehicleInfo, onSubmit }: Dia
     setItems(items.filter((item) => item.id !== id));
   };
 
-  const handleSubmit = () => {
+  const sendWhatsAppNotification = async () => {
+    const portalUrl = `${window.location.origin}/track`;
+    
+    const { data, error } = await supabase.functions.invoke('send-whatsapp-notification', {
+      body: {
+        clientName: service.clientName,
+        clientPhone: service.clientPhone,
+        vehicleBrand: service.vehicleBrand,
+        vehicleModel: service.vehicleModel,
+        vehiclePlate: service.vehiclePlate,
+        portalUrl,
+      },
+    });
+
+    if (error) {
+      console.error("WhatsApp notification error:", error);
+      throw error;
+    }
+
+    return data;
+  };
+
+  const handleSubmit = async () => {
     if (findings.trim() && items.length > 0) {
-      onSubmit(serviceId, {
-        findings: findings.trim(),
-        items,
-        createdAt: new Date(),
-      });
-      setOpen(false);
-      setFindings("");
-      setItems([]);
+      setIsSending(true);
+      
+      try {
+        // Submit the report first
+        onSubmit(serviceId, {
+          findings: findings.trim(),
+          items,
+          createdAt: new Date(),
+        });
+
+        // Send WhatsApp notification if enabled
+        if (sendNotification) {
+          await sendWhatsAppNotification();
+          toast({
+            title: "Notification sent!",
+            description: `WhatsApp message sent to ${service.clientName}`,
+          });
+        }
+
+        setOpen(false);
+        setFindings("");
+        setItems([]);
+      } catch (error: any) {
+        console.error("Error:", error);
+        toast({
+          title: "Report saved",
+          description: sendNotification 
+            ? "Report saved but WhatsApp notification failed. Client can still access the portal." 
+            : "Diagnostic report sent for approval.",
+          variant: sendNotification ? "destructive" : "default",
+        });
+        setOpen(false);
+        setFindings("");
+        setItems([]);
+      } finally {
+        setIsSending(false);
+      }
     }
   };
 
@@ -173,17 +232,45 @@ export function DiagnosticReportDialog({ serviceId, vehicleInfo, onSubmit }: Dia
               </div>
             )}
           </div>
+
+          {/* WhatsApp notification option */}
+          <div className="flex items-center space-x-3 p-4 rounded-lg bg-muted/50 border">
+            <Checkbox
+              id="send-notification"
+              checked={sendNotification}
+              onCheckedChange={(checked) => setSendNotification(checked === true)}
+            />
+            <div className="flex-1">
+              <Label htmlFor="send-notification" className="cursor-pointer font-medium flex items-center gap-2">
+                <Send className="w-4 h-4 text-green-600" />
+                Send WhatsApp notification
+              </Label>
+              <p className="text-sm text-muted-foreground">
+                Notify {service.clientName} via WhatsApp with a link to approve services
+              </p>
+            </div>
+          </div>
         </div>
 
         <div className="flex justify-end gap-2">
-          <Button variant="outline" onClick={() => setOpen(false)}>
+          <Button variant="outline" onClick={() => setOpen(false)} disabled={isSending}>
             Cancel
           </Button>
           <Button 
             onClick={handleSubmit}
-            disabled={!findings.trim() || items.length === 0}
+            disabled={!findings.trim() || items.length === 0 || isSending}
           >
-            Send for Approval
+            {isSending ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Sending...
+              </>
+            ) : (
+              <>
+                {sendNotification && <Send className="w-4 h-4 mr-2" />}
+                Send for Approval
+              </>
+            )}
           </Button>
         </div>
       </DialogContent>

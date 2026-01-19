@@ -116,7 +116,7 @@ export function ServiceCard({ service, onStatusChange, onAddDiagnosticReport, on
             {service.status === 'diagnosing' && (
               <DiagnosticReportDialog
                 serviceId={service.id}
-                vehicleInfo={vehicleInfo}
+                service={service}
                 onSubmit={onAddDiagnosticReport}
               />
             )}
