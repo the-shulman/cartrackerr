@@ -1,4 +1,20 @@
-export type ServiceStatus = 'received' | 'diagnosing' | 'in_progress' | 'ready' | 'delivered';
+export type ServiceStatus = 'received' | 'diagnosing' | 'awaiting_approval' | 'in_progress' | 'ready' | 'delivered';
+
+export interface DiagnosticItem {
+  id: string;
+  description: string;
+  price: number;
+  approved: boolean;
+  priority: 'required' | 'recommended' | 'optional';
+}
+
+export interface DiagnosticReport {
+  findings: string;
+  items: DiagnosticItem[];
+  createdAt: Date;
+  approvedAt?: Date;
+  clientNotes?: string;
+}
 
 export interface Service {
   id: string;
@@ -14,11 +30,13 @@ export interface Service {
   createdAt: Date;
   updatedAt: Date;
   estimatedCompletion?: Date;
+  diagnosticReport?: DiagnosticReport;
 }
 
 export const STATUS_LABELS: Record<ServiceStatus, string> = {
   received: 'Received',
   diagnosing: 'Diagnosing',
+  awaiting_approval: 'Awaiting Approval',
   in_progress: 'In Progress',
   ready: 'Ready for Pickup',
   delivered: 'Delivered',
@@ -27,6 +45,7 @@ export const STATUS_LABELS: Record<ServiceStatus, string> = {
 export const STATUS_ORDER: ServiceStatus[] = [
   'received',
   'diagnosing',
+  'awaiting_approval',
   'in_progress',
   'ready',
   'delivered',

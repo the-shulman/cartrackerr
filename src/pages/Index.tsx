@@ -11,7 +11,7 @@ import { Inbox, Search, Wrench, CheckCircle } from "lucide-react";
 import { Input } from "@/components/ui/input";
 
 const Index = () => {
-  const { services, addService, updateStatus, getCounts } = useServices();
+  const { services, addService, updateStatus, addDiagnosticReport, approveServices, getCounts } = useServices();
   const { branding, updateBranding, resetBranding } = useBranding();
   const [activeFilter, setActiveFilter] = useState<ServiceStatus | 'all'>('all');
   const [searchQuery, setSearchQuery] = useState("");
@@ -95,6 +95,8 @@ const Index = () => {
                 key={service.id}
                 service={service}
                 onStatusChange={updateStatus}
+                onAddDiagnosticReport={addDiagnosticReport}
+                onApproveServices={approveServices}
               />
             ))}
           </div>

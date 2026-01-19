@@ -8,7 +8,7 @@ interface FilterTabsProps {
 }
 
 export function FilterTabs({ activeFilter, onFilterChange, counts }: FilterTabsProps) {
-  const filters: (ServiceStatus | 'all')[] = ['all', 'received', 'diagnosing', 'in_progress', 'ready', 'delivered'];
+  const filters: (ServiceStatus | 'all')[] = ['all', 'received', 'diagnosing', 'awaiting_approval', 'in_progress', 'ready', 'delivered'];
 
   return (
     <div className="flex gap-2 overflow-x-auto pb-2">

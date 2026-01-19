@@ -60,6 +60,7 @@ export default {
         status: {
           received: "hsl(var(--status-received))",
           diagnosing: "hsl(var(--status-diagnosing))",
+          awaiting: "hsl(var(--status-awaiting))",
           progress: "hsl(var(--status-progress))",
           ready: "hsl(var(--status-ready))",
           delivered: "hsl(var(--status-delivered))",

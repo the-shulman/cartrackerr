@@ -14,6 +14,7 @@ const badgeVariants = cva(
         outline: "text-foreground",
         received: "border-transparent bg-status-received text-primary-foreground",
         diagnosing: "border-transparent bg-status-diagnosing text-white",
+        awaiting: "border-transparent bg-status-awaiting text-white",
         progress: "border-transparent bg-status-progress text-white",
         ready: "border-transparent bg-status-ready text-white",
         delivered: "border-transparent bg-status-delivered text-white",
