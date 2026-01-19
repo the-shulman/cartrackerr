@@ -5,9 +5,10 @@ interface StatusBadgeProps {
   status: ServiceStatus;
 }
 
-const statusVariantMap: Record<ServiceStatus, "received" | "diagnosing" | "progress" | "ready" | "delivered"> = {
+const statusVariantMap: Record<ServiceStatus, "received" | "diagnosing" | "awaiting" | "progress" | "ready" | "delivered"> = {
   received: "received",
   diagnosing: "diagnosing",
+  awaiting_approval: "awaiting",
   in_progress: "progress",
   ready: "ready",
   delivered: "delivered",

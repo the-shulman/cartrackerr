@@ -1,16 +1,38 @@
-import { Service } from "@/types/service";
+import { Service, DiagnosticReport } from "@/types/service";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { StatusBadge } from "./StatusBadge";
 import { StatusProgress } from "./StatusProgress";
-import { Car, Phone, User, Calendar, Wrench } from "lucide-react";
+import { DiagnosticReportDialog } from "./DiagnosticReportDialog";
+import { ClientApprovalDialog } from "./ClientApprovalDialog";
+import { Car, Phone, User, Calendar, Wrench, DollarSign, CheckCircle2 } from "lucide-react";
 import { format } from "date-fns";
 
 interface ServiceCardProps {
   service: Service;
   onStatusChange: (id: string, status: Service['status']) => void;
+  onAddDiagnosticReport: (id: string, report: DiagnosticReport) => void;
+  onApproveServices: (id: string, approvedItemIds: string[], clientNotes?: string) => void;
 }
 
-export function ServiceCard({ service, onStatusChange }: ServiceCardProps) {
+export function ServiceCard({ service, onStatusChange, onAddDiagnosticReport, onApproveServices }: ServiceCardProps) {
+  const vehicleInfo = `${service.vehicleBrand} ${service.vehicleModel} (${service.vehiclePlate})`;
+  
+  const approvedTotal = service.diagnosticReport?.items
+    .filter(item => item.approved)
+    .reduce((sum, item) => sum + item.price, 0) ?? 0;
+
+  const canAdvanceStatus = () => {
+    if (service.status === 'diagnosing') return false; // Must add report first
+    if (service.status === 'awaiting_approval') return false; // Must approve first
+    return service.status !== 'delivered';
+  };
+
+  const getNextStatus = () => {
+    const statusFlow = ['received', 'diagnosing', 'awaiting_approval', 'in_progress', 'ready', 'delivered'];
+    const currentIndex = statusFlow.indexOf(service.status);
+    return statusFlow[currentIndex + 1] as Service['status'];
+  };
+
   return (
     <Card className="gradient-card shadow-card hover:shadow-elevated transition-all duration-300 animate-slide-up overflow-hidden">
       <CardHeader className="pb-3">
@@ -55,6 +77,33 @@ export function ServiceCard({ service, onStatusChange }: ServiceCardProps) {
           </p>
         )}
 
+        {/* Show approved services summary */}
+        {service.diagnosticReport?.approvedAt && (
+          <div className="bg-status-ready/10 border border-status-ready/30 p-3 rounded-lg">
+            <div className="flex items-center gap-2 mb-2">
+              <CheckCircle2 className="w-4 h-4 text-status-ready" />
+              <span className="font-medium text-sm">Approved Services</span>
+            </div>
+            <div className="text-sm space-y-1">
+              {service.diagnosticReport.items
+                .filter(item => item.approved)
+                .map(item => (
+                  <div key={item.id} className="flex justify-between">
+                    <span>{item.description}</span>
+                    <span className="font-medium">${item.price.toFixed(2)}</span>
+                  </div>
+                ))}
+              <div className="flex justify-between pt-2 border-t border-status-ready/30 font-semibold">
+                <span>Total</span>
+                <span className="flex items-center gap-1">
+                  <DollarSign className="w-3 h-3" />
+                  {approvedTotal.toFixed(2)}
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
+
         {service.status !== 'delivered' && (
           <div className="pt-4 border-t">
             <StatusProgress currentStatus={service.status} />
@@ -62,17 +111,35 @@ export function ServiceCard({ service, onStatusChange }: ServiceCardProps) {
         )}
 
         {service.status !== 'delivered' && (
-          <div className="flex gap-2 pt-2">
-            <button
-              onClick={() => {
-                const statusIndex = ['received', 'diagnosing', 'in_progress', 'ready', 'delivered'].indexOf(service.status);
-                const nextStatus = ['received', 'diagnosing', 'in_progress', 'ready', 'delivered'][statusIndex + 1] as Service['status'];
-                if (nextStatus) onStatusChange(service.id, nextStatus);
-              }}
-              className="flex-1 py-2 px-4 text-sm font-medium rounded-lg gradient-accent text-accent-foreground hover:opacity-90 transition-opacity"
-            >
-              Advance Status
-            </button>
+          <div className="flex gap-2 pt-2 flex-wrap">
+            {/* Show diagnostic report button when diagnosing */}
+            {service.status === 'diagnosing' && (
+              <DiagnosticReportDialog
+                serviceId={service.id}
+                vehicleInfo={vehicleInfo}
+                onSubmit={onAddDiagnosticReport}
+              />
+            )}
+
+            {/* Show approval button when awaiting approval */}
+            {service.status === 'awaiting_approval' && service.diagnosticReport && (
+              <ClientApprovalDialog
+                serviceId={service.id}
+                vehicleInfo={vehicleInfo}
+                report={service.diagnosticReport}
+                onApprove={onApproveServices}
+              />
+            )}
+
+            {/* Show advance status button for other states */}
+            {canAdvanceStatus() && (
+              <button
+                onClick={() => onStatusChange(service.id, getNextStatus())}
+                className="flex-1 py-2 px-4 text-sm font-medium rounded-lg gradient-accent text-accent-foreground hover:opacity-90 transition-opacity"
+              >
+                Advance Status
+              </button>
+            )}
           </div>
         )}
       </CardContent>
