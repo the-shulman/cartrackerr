@@ -11,6 +11,7 @@ export interface DiagnosticItem {
 export interface DiagnosticReport {
   findings: string;
   items: DiagnosticItem[];
+  images?: string[];
   createdAt: Date;
   approvedAt?: Date;
   clientNotes?: string;

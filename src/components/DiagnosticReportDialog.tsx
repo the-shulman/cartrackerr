@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { ClipboardList, Plus, Trash2, Send, Loader2 } from "lucide-react";
+import { useState, useRef } from "react";
+import { ClipboardList, Plus, Trash2, Send, Loader2, ImagePlus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -37,6 +37,10 @@ export function DiagnosticReportDialog({ serviceId, service, onSubmit }: Diagnos
   const [newItem, setNewItem] = useState({ description: "", price: "", priority: "recommended" as DiagnosticItem['priority'] });
   const [sendNotification, setSendNotification] = useState(true);
   const [isSending, setIsSending] = useState(false);
+  const [images, setImages] = useState<File[]>([]);
+  const [imagePreviews, setImagePreviews] = useState<string[]>([]);
+  const [isUploadingImages, setIsUploadingImages] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
   const vehicleInfo = `${service.vehicleBrand} ${service.vehicleModel} (${service.vehiclePlate})`;
@@ -59,6 +63,65 @@ export function DiagnosticReportDialog({ serviceId, service, onSubmit }: Diagnos
 
   const removeItem = (id: string) => {
     setItems(items.filter((item) => item.id !== id));
+  };
+
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length + images.length > 10) {
+      toast({
+        title: "Límite de imágenes",
+        description: "Máximo 10 imágenes por reporte",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    const newImages = [...images, ...files];
+    setImages(newImages);
+    
+    // Create previews
+    files.forEach(file => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setImagePreviews(prev => [...prev, e.target?.result as string]);
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const removeImage = (index: number) => {
+    setImages(prev => prev.filter((_, i) => i !== index));
+    setImagePreviews(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const uploadImages = async (): Promise<string[]> => {
+    if (images.length === 0) return [];
+    
+    setIsUploadingImages(true);
+    const uploadedUrls: string[] = [];
+    
+    try {
+      for (const image of images) {
+        const fileExt = image.name.split('.').pop();
+        const fileName = `${serviceId}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+        
+        const { error: uploadError } = await supabase.storage
+          .from('diagnostic-images')
+          .upload(fileName, image);
+        
+        if (uploadError) throw uploadError;
+        
+        const { data: { publicUrl } } = supabase.storage
+          .from('diagnostic-images')
+          .getPublicUrl(fileName);
+        
+        uploadedUrls.push(publicUrl);
+      }
+      
+      return uploadedUrls;
+    } finally {
+      setIsUploadingImages(false);
+    }
   };
 
   const sendWhatsAppNotification = async () => {
@@ -88,10 +151,14 @@ export function DiagnosticReportDialog({ serviceId, service, onSubmit }: Diagnos
       setIsSending(true);
       
       try {
-        // Submit the report first
+        // Upload images first
+        const uploadedImageUrls = await uploadImages();
+        
+        // Submit the report with images
         onSubmit(serviceId, {
           findings: findings.trim(),
           items,
+          images: uploadedImageUrls,
           createdAt: new Date(),
         });
 
@@ -105,8 +172,7 @@ export function DiagnosticReportDialog({ serviceId, service, onSubmit }: Diagnos
         }
 
         setOpen(false);
-        setFindings("");
-        setItems([]);
+        resetForm();
       } catch (error: any) {
         console.error("Error:", error);
         toast({
@@ -117,12 +183,18 @@ export function DiagnosticReportDialog({ serviceId, service, onSubmit }: Diagnos
           variant: sendNotification ? "destructive" : "default",
         });
         setOpen(false);
-        setFindings("");
-        setItems([]);
+        resetForm();
       } finally {
         setIsSending(false);
       }
     }
+  };
+
+  const resetForm = () => {
+    setFindings("");
+    setItems([]);
+    setImages([]);
+    setImagePreviews([]);
   };
 
   const totalEstimate = items.reduce((sum, item) => sum + item.price, 0);
@@ -233,6 +305,52 @@ export function DiagnosticReportDialog({ serviceId, service, onSubmit }: Diagnos
             )}
           </div>
 
+          {/* Image Upload Section */}
+          <div className="space-y-3">
+            <Label>Fotografías del Diagnóstico</Label>
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleImageSelect}
+              accept="image/*"
+              multiple
+              className="hidden"
+            />
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => fileInputRef.current?.click()}
+              className="w-full gap-2"
+              disabled={images.length >= 10}
+            >
+              <ImagePlus className="w-4 h-4" />
+              Agregar Imágenes ({images.length}/10)
+            </Button>
+            
+            {imagePreviews.length > 0 && (
+              <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+                {imagePreviews.map((preview, index) => (
+                  <div key={index} className="relative group aspect-square">
+                    <img
+                      src={preview}
+                      alt={`Preview ${index + 1}`}
+                      className="w-full h-full object-cover rounded-lg border"
+                    />
+                    <Button
+                      type="button"
+                      size="icon"
+                      variant="destructive"
+                      className="absolute top-1 right-1 w-6 h-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                      onClick={() => removeImage(index)}
+                    >
+                      <X className="w-3 h-3" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
           {/* WhatsApp notification option */}
           <div className="flex items-center space-x-3 p-4 rounded-lg bg-muted/50 border">
             <Checkbox
@@ -258,12 +376,12 @@ export function DiagnosticReportDialog({ serviceId, service, onSubmit }: Diagnos
           </Button>
           <Button 
             onClick={handleSubmit}
-            disabled={!findings.trim() || items.length === 0 || isSending}
+            disabled={!findings.trim() || items.length === 0 || isSending || isUploadingImages}
           >
-            {isSending ? (
+            {isSending || isUploadingImages ? (
               <>
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                Enviando...
+                {isUploadingImages ? "Subiendo imágenes..." : "Enviando..."}
               </>
             ) : (
               <>
