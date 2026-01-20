@@ -9,7 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { ArrowLeft, Car, Calendar, FileText, CheckCircle2, Clock, Wrench } from 'lucide-react';
+import { ArrowLeft, Car, Calendar, FileText, CheckCircle2, Clock, Wrench, Image } from 'lucide-react';
 import { format } from 'date-fns';
 
 interface ClientServiceViewProps {
@@ -161,6 +161,30 @@ export function ClientServiceView({ service, onApprove, onBack }: ClientServiceV
                 {report.findings}
               </p>
             </div>
+
+            {/* Diagnostic Images */}
+            {report.images && report.images.length > 0 && (
+              <>
+                <Separator />
+                <div>
+                  <h4 className="font-medium mb-3 flex items-center gap-2">
+                    <Image className="h-4 w-4" />
+                    Fotografías del Diagnóstico
+                  </h4>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                    {report.images.map((img, idx) => (
+                      <a key={idx} href={img} target="_blank" rel="noopener noreferrer">
+                        <img
+                          src={img}
+                          alt={`Diagnóstico ${idx + 1}`}
+                          className="w-full aspect-square object-cover rounded-lg border hover:opacity-80 transition-opacity cursor-pointer"
+                        />
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              </>
+            )}
 
             <Separator />
 

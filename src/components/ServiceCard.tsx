@@ -4,7 +4,7 @@ import { StatusBadge } from "./StatusBadge";
 import { StatusProgress } from "./StatusProgress";
 import { DiagnosticReportDialog } from "./DiagnosticReportDialog";
 import { ClientApprovalDialog } from "./ClientApprovalDialog";
-import { Car, Phone, User, Calendar, Wrench, DollarSign, CheckCircle2 } from "lucide-react";
+import { Car, Phone, User, Calendar, Wrench, DollarSign, CheckCircle2, Image } from "lucide-react";
 import { format } from "date-fns";
 
 interface ServiceCardProps {
@@ -75,6 +75,32 @@ export function ServiceCard({ service, onStatusChange, onAddDiagnosticReport, on
           <p className="text-sm text-muted-foreground bg-muted/50 p-3 rounded-lg">
             {service.description}
           </p>
+        )}
+
+        {/* Show diagnostic images */}
+        {service.diagnosticReport?.images && service.diagnosticReport.images.length > 0 && (
+          <div className="space-y-2">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Image className="w-4 h-4" />
+              <span>Fotografías del Diagnóstico ({service.diagnosticReport.images.length})</span>
+            </div>
+            <div className="grid grid-cols-3 gap-2">
+              {service.diagnosticReport.images.slice(0, 3).map((img, idx) => (
+                <a key={idx} href={img} target="_blank" rel="noopener noreferrer">
+                  <img
+                    src={img}
+                    alt={`Diagnóstico ${idx + 1}`}
+                    className="w-full aspect-square object-cover rounded-lg border hover:opacity-80 transition-opacity"
+                  />
+                </a>
+              ))}
+            </div>
+            {service.diagnosticReport.images.length > 3 && (
+              <p className="text-xs text-muted-foreground text-center">
+                +{service.diagnosticReport.images.length - 3} más
+              </p>
+            )}
+          </div>
         )}
 
         {/* Show approved services summary */}
