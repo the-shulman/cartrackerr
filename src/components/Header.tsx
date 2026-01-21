@@ -1,6 +1,7 @@
 import { Wrench, LogOut } from "lucide-react";
 import { BrandingConfig } from "@/types/branding";
 import { SettingsDialog } from "@/components/SettingsDialog";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { Button } from "@/components/ui/button";
 import { useAuthContext } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
@@ -47,6 +48,7 @@ export function Header({ branding, onUpdateBranding, onResetBranding }: HeaderPr
           </div>
         </div>
         <div className="flex items-center gap-2">
+          <ThemeToggle />
           <SettingsDialog 
             branding={branding} 
             onUpdate={onUpdateBranding} 
