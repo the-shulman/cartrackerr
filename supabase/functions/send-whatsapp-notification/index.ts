@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.7";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -15,45 +16,172 @@ interface NotificationRequest {
   portalUrl: string;
 }
 
+// Allowed country codes for phone number validation (E.164 format)
+const ALLOWED_COUNTRY_CODES = [
+  "1",    // USA, Canada
+  "52",   // Mexico
+  "54",   // Argentina
+  "55",   // Brazil
+  "56",   // Chile
+  "57",   // Colombia
+  "34",   // Spain
+  "51",   // Peru
+  "58",   // Venezuela
+  "593",  // Ecuador
+  "506",  // Costa Rica
+  "502",  // Guatemala
+  "503",  // El Salvador
+  "504",  // Honduras
+  "505",  // Nicaragua
+  "507",  // Panama
+];
+
+// Premium-rate or short-code number patterns to reject
+const BLOCKED_PATTERNS = [
+  /^1900/,    // US premium rate
+  /^1976/,    // US premium rate
+  /^44870/,   // UK non-geographic
+  /^44871/,   // UK premium
+  /^44872/,   // UK premium
+  /^44900/,   // UK premium
+  /^4909/,    // Germany premium
+  /^5219\d{2}/,  // Mexico premium
+];
+
+/**
+ * Validates and formats a phone number to E.164 format.
+ * Returns the formatted number or throws an error if invalid.
+ */
+function validateAndFormatPhone(rawPhone: string): string {
+  const cleaned = (rawPhone || "").trim();
+  const digitsOnly = cleaned.replace(/\D/g, "");
+
+  // Basic length check - international numbers are at least 8 digits
+  if (digitsOnly.length < 8) {
+    throw new Error("Phone number is too short. Please include country code.");
+  }
+
+  // Maximum reasonable length for international numbers
+  if (digitsOnly.length > 15) {
+    throw new Error("Phone number is too long. Please check the format.");
+  }
+
+  // Determine the E.164 format
+  let e164: string;
+  if (cleaned.startsWith("+")) {
+    e164 = `+${digitsOnly}`;
+  } else if (digitsOnly.startsWith("00")) {
+    e164 = `+${digitsOnly.slice(2)}`;
+  } else if (digitsOnly.length > 10) {
+    // Assume it includes country code
+    e164 = `+${digitsOnly}`;
+  } else {
+    throw new Error(
+      "Phone number must include country code (e.g., +52 55 1234 5678)."
+    );
+  }
+
+  const numberWithoutPlus = e164.slice(1);
+
+  // Check if the number matches a blocked premium-rate pattern
+  for (const pattern of BLOCKED_PATTERNS) {
+    if (pattern.test(numberWithoutPlus)) {
+      throw new Error("This phone number type is not supported.");
+    }
+  }
+
+  // Validate country code is in our allowlist
+  let matchedCountryCode = false;
+  for (const code of ALLOWED_COUNTRY_CODES) {
+    if (numberWithoutPlus.startsWith(code)) {
+      matchedCountryCode = true;
+      // Additional validation: ensure there are enough digits after country code
+      const nationalNumber = numberWithoutPlus.slice(code.length);
+      if (nationalNumber.length < 6 || nationalNumber.length > 12) {
+        throw new Error(
+          `Invalid phone number length for country code +${code}.`
+        );
+      }
+      break;
+    }
+  }
+
+  if (!matchedCountryCode) {
+    throw new Error(
+      "Country not supported. Supported regions: Americas, Spain."
+    );
+  }
+
+  return e164;
+}
+
 const handler = async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { clientName, clientPhone, vehicleBrand, vehicleModel, vehiclePlate, portalUrl }: NotificationRequest = await req.json();
+    const {
+      clientName,
+      clientPhone,
+      vehicleBrand,
+      vehicleModel,
+      vehiclePlate,
+      portalUrl,
+    }: NotificationRequest = await req.json();
+
+    // Input validation for all fields
+    if (!clientName || typeof clientName !== "string" || clientName.trim().length === 0) {
+      throw new Error("Client name is required.");
+    }
+    if (clientName.length > 100) {
+      throw new Error("Client name is too long.");
+    }
+
+    if (!vehicleBrand || typeof vehicleBrand !== "string") {
+      throw new Error("Vehicle brand is required.");
+    }
+    if (!vehicleModel || typeof vehicleModel !== "string") {
+      throw new Error("Vehicle model is required.");
+    }
+    if (!vehiclePlate || typeof vehiclePlate !== "string") {
+      throw new Error("Vehicle plate is required.");
+    }
+
+    // Validate and sanitize portal URL
+    if (!portalUrl || typeof portalUrl !== "string") {
+      throw new Error("Portal URL is required.");
+    }
+    // Only allow our own domain in the URL
+    try {
+      const url = new URL(portalUrl);
+      // Accept localhost for development and known production domains
+      const allowedHosts = ["localhost", "127.0.0.1"];
+      if (!allowedHosts.includes(url.hostname) && 
+          !url.hostname.endsWith(".lovable.app") &&
+          !url.hostname.endsWith(".supabase.co")) {
+        throw new Error("Invalid portal URL domain.");
+      }
+    } catch {
+      throw new Error("Invalid portal URL format.");
+    }
+
+    // Validate phone number with comprehensive checks
+    const toE164 = validateAndFormatPhone(clientPhone);
 
     const accountSid = Deno.env.get("TWILIO_ACCOUNT_SID");
     const authToken = Deno.env.get("TWILIO_AUTH_TOKEN");
     const fromNumber = Deno.env.get("TWILIO_WHATSAPP_FROM");
 
     if (!accountSid || !authToken || !fromNumber) {
-      console.error("Missing Twilio credentials:", { 
-        hasAccountSid: !!accountSid, 
-        hasAuthToken: !!authToken, 
-        hasFromNumber: !!fromNumber 
+      console.error("Missing Twilio credentials:", {
+        hasAccountSid: !!accountSid,
+        hasAuthToken: !!authToken,
+        hasFromNumber: !!fromNumber,
       });
-      throw new Error("Twilio credentials not configured. Please check TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, and TWILIO_WHATSAPP_FROM secrets.");
-    }
-
-    // Normalize phone number into E.164 for WhatsApp
-    const rawPhone = (clientPhone || "").trim();
-    const digitsOnly = rawPhone.replace(/\D/g, "");
-
-    let toE164: string;
-    if (rawPhone.startsWith("+")) {
-      if (!digitsOnly) throw new Error("Client phone number is invalid");
-      toE164 = `+${digitsOnly}`;
-    } else if (digitsOnly.startsWith("00")) {
-      toE164 = `+${digitsOnly.slice(2)}`;
-    } else {
-      // Require country code to avoid sending to the wrong number
-      if (digitsOnly.length <= 10) {
-        throw new Error(
-          "Client phone must include country code (example: +52 55 1234 5678)."
-        );
-      }
-      toE164 = `+${digitsOnly}`;
+      throw new Error(
+        "Twilio credentials not configured. Please check TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, and TWILIO_WHATSAPP_FROM secrets."
+      );
     }
 
     const formattedTo = `whatsapp:${toE164}`;
@@ -69,16 +197,25 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    const message = `Hi ${clientName}! 🚗\n\nYour vehicle diagnostic report is ready:\n\n🚙 ${vehicleBrand} ${vehicleModel}\n📋 Plate: ${vehiclePlate}\n\nPlease review and approve the recommended services:\n${portalUrl}\n\nReply to this message if you have any questions!`;
+    // Sanitize text inputs for the message
+    const safeName = clientName.trim().slice(0, 100);
+    const safeBrand = vehicleBrand.trim().slice(0, 50);
+    const safeModel = vehicleModel.trim().slice(0, 50);
+    const safePlate = vehiclePlate.trim().slice(0, 20);
+
+    const message = `Hi ${safeName}! 🚗\n\nYour vehicle diagnostic report is ready:\n\n🚙 ${safeBrand} ${safeModel}\n📋 Plate: ${safePlate}\n\nPlease review and approve the recommended services:\n${portalUrl}\n\nReply to this message if you have any questions!`;
 
     const twilioUrl = `https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`;
 
-    console.log("Sending WhatsApp message:", { to: formattedTo, from: formattedFrom });
+    console.log("Sending WhatsApp message:", {
+      to: formattedTo,
+      from: formattedFrom,
+    });
 
     const response = await fetch(twilioUrl, {
       method: "POST",
       headers: {
-        "Authorization": `Basic ${btoa(`${accountSid}:${authToken}`)}`,
+        Authorization: `Basic ${btoa(`${accountSid}:${authToken}`)}`,
         "Content-Type": "application/x-www-form-urlencoded",
       },
       body: new URLSearchParams({
@@ -91,7 +228,6 @@ const handler = async (req: Request): Promise<Response> => {
     // Get response text first to handle both JSON and XML responses
     const responseText = await response.text();
     console.log("Twilio response status:", response.status);
-    console.log("Twilio response:", responseText);
 
     if (!response.ok) {
       const trimmed = responseText.trim();
@@ -100,14 +236,15 @@ const handler = async (req: Request): Promise<Response> => {
       try {
         const errorData = JSON.parse(trimmed);
         console.error("Twilio API error:", errorData);
-        const msg = errorData.message || `Twilio error ${errorData.code || response.status}`;
+        const msg =
+          errorData.message || `Twilio error ${errorData.code || response.status}`;
         throw new Error(msg);
       } catch {
         // If not JSON, it's probably XML - extract error message
         const messageMatch = trimmed.match(/<Message>(.*?)<\/Message>/);
         const errorMessage = messageMatch
           ? messageMatch[1]
-          : `Twilio error ${response.status}: ${trimmed.slice(0, 200)}`;
+          : `Twilio error ${response.status}`;
         console.error("Twilio non-JSON error:", errorMessage);
         throw new Error(errorMessage);
       }
@@ -132,13 +269,10 @@ const handler = async (req: Request): Promise<Response> => {
     );
   } catch (error: any) {
     console.error("Error sending WhatsApp notification:", error.message);
-    return new Response(
-      JSON.stringify({ error: error.message }),
-      {
-        status: 500,
-        headers: { "Content-Type": "application/json", ...corsHeaders },
-      }
-    );
+    return new Response(JSON.stringify({ error: error.message }), {
+      status: 400,
+      headers: { "Content-Type": "application/json", ...corsHeaders },
+    });
   }
 };
 
