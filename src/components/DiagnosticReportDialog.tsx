@@ -111,11 +111,15 @@ export function DiagnosticReportDialog({ serviceId, service, onSubmit }: Diagnos
         
         if (uploadError) throw uploadError;
         
-        const { data: { publicUrl } } = supabase.storage
+        // Use signed URLs instead of public URLs for better security
+        // Signed URLs expire after 24 hours (86400 seconds)
+        const { data: signedUrlData, error: signedUrlError } = await supabase.storage
           .from('diagnostic-images')
-          .getPublicUrl(fileName);
+          .createSignedUrl(fileName, 86400);
         
-        uploadedUrls.push(publicUrl);
+        if (signedUrlError) throw signedUrlError;
+        
+        uploadedUrls.push(signedUrlData.signedUrl);
       }
       
       return uploadedUrls;
