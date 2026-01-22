@@ -11,19 +11,20 @@ export function FilterTabs({ activeFilter, onFilterChange, counts }: FilterTabsP
   const filters: (ServiceStatus | 'all')[] = ['all', 'received', 'diagnosing', 'awaiting_approval', 'in_progress', 'ready', 'delivered'];
 
   return (
-    <div className="flex gap-2 overflow-x-auto pb-2">
+    <div className="flex gap-2 overflow-x-auto pb-2 snap-x snap-mandatory -mx-1 px-1">
       {filters.map((filter) => (
         <button
           key={filter}
           onClick={() => onFilterChange(filter)}
           className={cn(
-            "px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all duration-200",
+            "px-4 py-3 rounded-lg text-sm font-medium whitespace-nowrap transition-all duration-200 snap-start",
+            "min-h-[44px] touch-manipulation active:scale-95",
             activeFilter === filter
               ? "gradient-accent text-accent-foreground shadow-glow"
-              : "bg-card text-muted-foreground hover:bg-muted"
+              : "bg-card text-muted-foreground hover:bg-muted active:bg-muted"
           )}
         >
-          {filter === 'all' ? 'Todos los Servicios' : STATUS_LABELS[filter]}
+          {filter === 'all' ? 'Todos' : STATUS_LABELS[filter]}
           <span className={cn(
             "ml-2 px-2 py-0.5 rounded-full text-xs",
             activeFilter === filter 

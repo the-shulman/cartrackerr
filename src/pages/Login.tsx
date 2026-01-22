@@ -32,18 +32,20 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4">
+    <div className="min-h-screen bg-background flex items-center justify-center p-4 safe-area-inset">
       <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <div className="flex justify-center mb-4">
-            <div className="w-12 h-12 bg-primary rounded-lg flex items-center justify-center">
-              <Car className="w-6 h-6 text-primary-foreground" />
+        <CardHeader className="text-center space-y-4">
+          <div className="flex justify-center">
+            <div className="w-16 h-16 md:w-12 md:h-12 bg-primary rounded-xl flex items-center justify-center">
+              <Car className="w-8 h-8 md:w-6 md:h-6 text-primary-foreground" />
             </div>
           </div>
-          <CardTitle className="text-2xl">Iniciar Sesión</CardTitle>
-          <CardDescription>
-            Accede al panel de tu taller
-          </CardDescription>
+          <div>
+            <CardTitle className="text-2xl md:text-2xl">Iniciar Sesión</CardTitle>
+            <CardDescription className="mt-1">
+              Accede al panel de tu taller
+            </CardDescription>
+          </div>
         </CardHeader>
         <form onSubmit={handleSubmit}>
           <CardContent className="space-y-4">
@@ -57,8 +59,10 @@ const Login = () => {
                   placeholder="tu@email.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="pl-9"
+                  className="pl-9 h-12 text-base"
                   required
+                  autoComplete="email"
+                  inputMode="email"
                 />
               </div>
             </div>
@@ -72,14 +76,19 @@ const Login = () => {
                   placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="pl-9"
+                  className="pl-9 h-12 text-base"
                   required
+                  autoComplete="current-password"
                 />
               </div>
             </div>
           </CardContent>
           <CardFooter className="flex flex-col gap-4">
-            <Button type="submit" className="w-full" disabled={loading}>
+            <Button 
+              type="submit" 
+              className="w-full h-12 text-base touch-manipulation active:scale-[0.98]" 
+              disabled={loading}
+            >
               {loading ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />

@@ -34,13 +34,13 @@ export function ServiceCard({ service, onStatusChange, onAddDiagnosticReport, on
   };
 
   return (
-    <Card className="gradient-card shadow-card hover:shadow-elevated transition-all duration-300 animate-slide-up overflow-hidden">
-      <CardHeader className="pb-3">
-        <div className="flex items-start justify-between">
-          <div className="space-y-1">
+    <Card className="gradient-card shadow-card hover:shadow-elevated transition-all duration-300 animate-slide-up overflow-hidden touch-manipulation">
+      <CardHeader className="pb-3 px-4 md:px-6">
+        <div className="flex items-start justify-between gap-2">
+          <div className="space-y-1 min-w-0 flex-1">
             <div className="flex items-center gap-2">
-              <Car className="w-5 h-5 text-accent" />
-              <h3 className="font-semibold text-lg">
+              <Car className="w-5 h-5 text-accent flex-shrink-0" />
+              <h3 className="font-semibold text-base md:text-lg truncate">
                 {service.vehicleBrand} {service.vehicleModel}
               </h3>
             </div>
@@ -51,7 +51,7 @@ export function ServiceCard({ service, onStatusChange, onAddDiagnosticReport, on
           <StatusBadge status={service.status} />
         </div>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-4 px-4 md:px-6">
         <div className="grid grid-cols-2 gap-4 text-sm">
           <div className="flex items-center gap-2">
             <User className="w-4 h-4 text-muted-foreground" />
@@ -160,7 +160,7 @@ export function ServiceCard({ service, onStatusChange, onAddDiagnosticReport, on
             {canAdvanceStatus() && (
               <button
                 onClick={() => onStatusChange(service.id, getNextStatus())}
-                className="flex-1 py-2 px-4 text-sm font-medium rounded-lg gradient-accent text-accent-foreground hover:opacity-90 transition-opacity"
+                className="flex-1 py-3 px-4 text-sm font-medium rounded-lg gradient-accent text-accent-foreground hover:opacity-90 active:scale-[0.98] transition-all min-h-[44px] touch-manipulation"
               >
                 Avanzar Estado
               </button>
