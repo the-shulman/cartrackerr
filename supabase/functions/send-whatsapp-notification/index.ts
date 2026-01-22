@@ -323,8 +323,49 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log("WhatsApp message sent successfully:", result.sid);
 
+    // Fetch message status from Twilio to help diagnose delivery issues (sandbox opt-in, invalid recipient, etc.)
+    // Note: Twilio status may still be 'queued'/'sent' immediately after creation.
+    let deliveryStatus: {
+      status?: string;
+      error_code?: number | null;
+      error_message?: string | null;
+      to?: string;
+      from?: string;
+    } | null = null;
+
+    if (result?.sid && result.sid !== "unknown") {
+      try {
+        const statusRes = await fetch(
+          `https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages/${result.sid}.json`,
+          {
+            method: "GET",
+            headers: {
+              Authorization: `Basic ${btoa(`${accountSid}:${authToken}`)}`,
+            },
+          }
+        );
+
+        const statusText = await statusRes.text();
+        if (statusRes.ok) {
+          const statusJson = JSON.parse(statusText);
+          deliveryStatus = {
+            status: statusJson.status,
+            error_code: statusJson.error_code,
+            error_message: statusJson.error_message,
+            to: statusJson.to,
+            from: statusJson.from,
+          };
+          console.log("Twilio delivery status:", deliveryStatus);
+        } else {
+          console.warn("Could not fetch Twilio message status:", statusRes.status, statusText);
+        }
+      } catch (e: any) {
+        console.warn("Error fetching Twilio message status:", e?.message || String(e));
+      }
+    }
+
     return new Response(
-      JSON.stringify({ success: true, messageSid: result.sid }),
+      JSON.stringify({ success: true, messageSid: result.sid, deliveryStatus }),
       {
         status: 200,
         headers: { "Content-Type": "application/json", ...corsHeaders },
