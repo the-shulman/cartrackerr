@@ -121,6 +121,61 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
+    // Authentication: Verify the user is logged in
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader?.startsWith("Bearer ")) {
+      return new Response(
+        JSON.stringify({ error: "Unauthorized: Missing or invalid authorization header" }),
+        { status: 401, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    const supabaseUrl = Deno.env.get("SUPABASE_URL");
+    const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY");
+
+    if (!supabaseUrl || !supabaseAnonKey) {
+      console.error("Missing Supabase configuration");
+      return new Response(
+        JSON.stringify({ error: "Server configuration error" }),
+        { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    const supabaseClient = createClient(supabaseUrl, supabaseAnonKey, {
+      global: { headers: { Authorization: authHeader } },
+    });
+
+    // Verify the user is authenticated
+    const { data: { user }, error: authError } = await supabaseClient.auth.getUser();
+
+    if (authError || !user) {
+      console.error("Authentication failed:", authError?.message || "No user found");
+      return new Response(
+        JSON.stringify({ error: "Unauthorized: Invalid or expired token" }),
+        { status: 401, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    const userId = user.id;
+    console.log("Authenticated user:", userId);
+
+    // Verify user has a workshop (authorization check)
+    const { data: workshop, error: workshopError } = await supabaseClient
+      .from("workshops")
+      .select("id")
+      .eq("user_id", userId)
+      .maybeSingle();
+
+    if (workshopError || !workshop) {
+      console.error("Workshop verification failed:", workshopError?.message || "No workshop found");
+      return new Response(
+        JSON.stringify({ error: "Unauthorized: User does not own a workshop" }),
+        { status: 403, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    console.log("Authorized workshop:", workshop.id);
+
     const {
       clientName,
       clientPhone,
