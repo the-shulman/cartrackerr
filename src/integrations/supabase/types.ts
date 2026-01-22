@@ -14,6 +14,68 @@ export type Database = {
   }
   public: {
     Tables: {
+      services: {
+        Row: {
+          client_name: string
+          client_phone: string
+          created_at: string
+          description: string | null
+          diagnostic_report: Json | null
+          estimated_completion: string | null
+          id: string
+          service_type: string
+          status: string
+          updated_at: string
+          vehicle_brand: string
+          vehicle_model: string
+          vehicle_plate: string
+          vehicle_year: string
+          workshop_id: string
+        }
+        Insert: {
+          client_name: string
+          client_phone: string
+          created_at?: string
+          description?: string | null
+          diagnostic_report?: Json | null
+          estimated_completion?: string | null
+          id?: string
+          service_type: string
+          status?: string
+          updated_at?: string
+          vehicle_brand: string
+          vehicle_model: string
+          vehicle_plate: string
+          vehicle_year: string
+          workshop_id: string
+        }
+        Update: {
+          client_name?: string
+          client_phone?: string
+          created_at?: string
+          description?: string | null
+          diagnostic_report?: Json | null
+          estimated_completion?: string | null
+          id?: string
+          service_type?: string
+          status?: string
+          updated_at?: string
+          vehicle_brand?: string
+          vehicle_model?: string
+          vehicle_plate?: string
+          vehicle_year?: string
+          workshop_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "services_workshop_id_fkey"
+            columns: ["workshop_id"]
+            isOneToOne: false
+            referencedRelation: "workshops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       workshops: {
         Row: {
           created_at: string
@@ -46,7 +108,20 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      approve_service_items: {
+        Args: {
+          p_approved_item_ids: string[]
+          p_client_notes?: string
+          p_phone: string
+          p_plate: string
+          p_service_id: string
+        }
+        Returns: Json
+      }
+      lookup_service_by_phone_plate: {
+        Args: { p_phone: string; p_plate: string }
+        Returns: Json
+      }
     }
     Enums: {
       [_ in never]: never
