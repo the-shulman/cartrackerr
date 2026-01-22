@@ -221,11 +221,12 @@ const handler = async (req: Request): Promise<Response> => {
     const allowedHosts = ["localhost", "127.0.0.1"];
     const isAllowedHost = allowedHosts.includes(parsedUrl.hostname);
     const isLovableApp = parsedUrl.hostname.endsWith(".lovable.app");
+    const isLovableProject = parsedUrl.hostname.endsWith(".lovableproject.com");
     const isSupabase = parsedUrl.hostname.endsWith(".supabase.co");
     
-    if (!isAllowedHost && !isLovableApp && !isSupabase) {
+    if (!isAllowedHost && !isLovableApp && !isLovableProject && !isSupabase) {
       console.error("Rejected portal URL domain:", parsedUrl.hostname);
-      throw new Error(`Invalid portal URL domain: ${parsedUrl.hostname}. Only lovable.app domains are allowed.`);
+      throw new Error(`Invalid portal URL domain: ${parsedUrl.hostname}. Only Lovable domains are allowed.`);
     }
 
     // Validate phone number with comprehensive checks
