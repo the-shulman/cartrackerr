@@ -204,6 +204,7 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     // Validate and sanitize portal URL
+    console.log("Received portalUrl:", portalUrl);
     if (!portalUrl || typeof portalUrl !== "string") {
       throw new Error("Portal URL is required.");
     }
