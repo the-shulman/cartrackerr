@@ -128,22 +128,19 @@ export function DiagnosticReportDialog({ serviceId, service, onSubmit }: Diagnos
     }
   };
 
-  const sendWhatsAppNotification = async () => {
+  const sendSmsNotification = async () => {
     const portalUrl = `${window.location.origin}/track`;
     
-    const { data, error } = await supabase.functions.invoke('send-whatsapp-notification', {
+    const { data, error } = await supabase.functions.invoke('send-sms-notification', {
       body: {
         clientName: service.clientName,
         clientPhone: service.clientPhone,
-        vehicleBrand: service.vehicleBrand,
-        vehicleModel: service.vehicleModel,
-        vehiclePlate: service.vehiclePlate,
         portalUrl,
       },
     });
 
     if (error) {
-      console.error("WhatsApp notification error:", error);
+      console.error("SMS notification error:", error);
       throw error;
     }
 
@@ -166,12 +163,12 @@ export function DiagnosticReportDialog({ serviceId, service, onSubmit }: Diagnos
           createdAt: new Date(),
         });
 
-        // Send WhatsApp notification if enabled
+        // Send SMS notification if enabled
         if (sendNotification) {
-          await sendWhatsAppNotification();
+          await sendSmsNotification();
           toast({
             title: "¡Notificación enviada!",
-            description: `Mensaje de WhatsApp enviado a ${service.clientName}`,
+            description: `SMS enviado a ${service.clientName}`,
           });
         }
 
