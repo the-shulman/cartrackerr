@@ -7,6 +7,7 @@ import { ThemeProvider } from "next-themes";
 import { ServicesProvider } from "@/contexts/ServicesContext";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { InstallPrompt, OfflineIndicator } from "@/components/InstallPrompt";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import ClientPortalPage from "./pages/ClientPortalPage";
@@ -22,6 +23,7 @@ const App = () => (
         <BrowserRouter>
           <AuthProvider>
             <ServicesProvider>
+              <OfflineIndicator />
               <Toaster />
               <Sonner />
               <Routes>
@@ -39,6 +41,7 @@ const App = () => (
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>
+              <InstallPrompt />
             </ServicesProvider>
           </AuthProvider>
         </BrowserRouter>
