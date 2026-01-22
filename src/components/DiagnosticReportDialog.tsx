@@ -179,7 +179,7 @@ export function DiagnosticReportDialog({ serviceId, service, onSubmit }: Diagnos
         toast({
           title: "Reporte guardado",
           description: sendNotification 
-            ? "El reporte se guardó pero falló la notificación de WhatsApp. El cliente puede acceder al portal." 
+            ? "El reporte se guardó pero falló la notificación por SMS. El cliente puede acceder al portal." 
             : "Reporte diagnóstico enviado para aprobación.",
           variant: sendNotification ? "destructive" : "default",
         });
@@ -352,7 +352,7 @@ export function DiagnosticReportDialog({ serviceId, service, onSubmit }: Diagnos
             )}
           </div>
 
-          {/* WhatsApp notification option */}
+          {/* SMS notification option */}
           <div className="flex items-center space-x-3 p-4 rounded-lg bg-muted/50 border">
             <Checkbox
               id="send-notification"
@@ -362,10 +362,10 @@ export function DiagnosticReportDialog({ serviceId, service, onSubmit }: Diagnos
             <div className="flex-1">
               <Label htmlFor="send-notification" className="cursor-pointer font-medium flex items-center gap-2">
                 <Send className="w-4 h-4 text-status-ready" />
-                Enviar notificación por WhatsApp
+                Enviar notificación por SMS
               </Label>
               <p className="text-sm text-muted-foreground">
-                Notificar a {service.clientName} por WhatsApp con un enlace para aprobar los servicios
+                Notificar a {service.clientName} por SMS con un enlace para aprobar los servicios
               </p>
             </div>
           </div>
