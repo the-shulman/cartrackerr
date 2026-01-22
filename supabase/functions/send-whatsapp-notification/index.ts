@@ -207,18 +207,24 @@ const handler = async (req: Request): Promise<Response> => {
     if (!portalUrl || typeof portalUrl !== "string") {
       throw new Error("Portal URL is required.");
     }
-    // Only allow our own domain in the URL
+    
+    // Parse URL - handle parsing errors separately from domain validation
+    let parsedUrl: URL;
     try {
-      const url = new URL(portalUrl);
-      // Accept localhost for development and known production domains
-      const allowedHosts = ["localhost", "127.0.0.1"];
-      if (!allowedHosts.includes(url.hostname) && 
-          !url.hostname.endsWith(".lovable.app") &&
-          !url.hostname.endsWith(".supabase.co")) {
-        throw new Error("Invalid portal URL domain.");
-      }
+      parsedUrl = new URL(portalUrl);
     } catch {
-      throw new Error("Invalid portal URL format.");
+      throw new Error("Invalid portal URL format - could not parse URL.");
+    }
+    
+    // Only allow our own domain in the URL
+    const allowedHosts = ["localhost", "127.0.0.1"];
+    const isAllowedHost = allowedHosts.includes(parsedUrl.hostname);
+    const isLovableApp = parsedUrl.hostname.endsWith(".lovable.app");
+    const isSupabase = parsedUrl.hostname.endsWith(".supabase.co");
+    
+    if (!isAllowedHost && !isLovableApp && !isSupabase) {
+      console.error("Rejected portal URL domain:", parsedUrl.hostname);
+      throw new Error(`Invalid portal URL domain: ${parsedUrl.hostname}. Only lovable.app domains are allowed.`);
     }
 
     // Validate phone number with comprehensive checks
