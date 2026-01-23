@@ -55,6 +55,22 @@ export function ServiceCard({ service, onStatusChange, onAddDiagnosticReport, on
     return digits;
   };
 
+  const openWhatsAppLink = (link: string) => {
+    const isStandalone =
+      window.matchMedia?.("(display-mode: standalone)")?.matches ||
+      (window.navigator as any).standalone === true;
+
+    if (isStandalone) {
+      window.location.href = link;
+      return;
+    }
+
+    const win = window.open(link, "_blank", "noopener,noreferrer");
+    if (!win) {
+      window.location.href = link;
+    }
+  };
+
   const openWhatsApp = () => {
     const portalUrl = `${window.location.origin}/track`;
     const phone = formatPhoneForWhatsApp(service.clientPhone);
@@ -71,7 +87,7 @@ Ingresa con:
 🚘 Placa: ${service.vehiclePlate}`;
 
     const link = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
-    window.open(link, '_blank', 'noopener,noreferrer');
+    openWhatsAppLink(link);
   };
 
   return (

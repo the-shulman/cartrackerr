@@ -41,6 +41,7 @@ export function DiagnosticReportDialog({ serviceId, service, onSubmit }: Diagnos
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
   const [isUploadingImages, setIsUploadingImages] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const pendingWhatsAppWindowRef = useRef<Window | null>(null);
   const { toast } = useToast();
 
   const vehicleInfo = `${service.vehicleBrand} ${service.vehicleModel} (${service.vehiclePlate})`;
@@ -173,14 +174,49 @@ Ingresa con:
     return `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
   };
 
-  const openWhatsAppNotification = () => {
-    const link = generateWhatsAppLink();
-    window.open(link, '_blank', 'noopener,noreferrer');
+  const openWhatsAppLink = (link: string) => {
+    // In PWA/standalone mode, window.open often results in a blank page.
+    const isStandalone =
+      window.matchMedia?.("(display-mode: standalone)")?.matches ||
+      // iOS Safari
+      (window.navigator as any).standalone === true;
+
+    if (isStandalone) {
+      window.location.href = link;
+      return;
+    }
+
+    // If we pre-opened a window (to avoid popup blockers), reuse it.
+    const win = pendingWhatsAppWindowRef.current;
+    if (win && !win.closed) {
+      try {
+        win.location.href = link;
+        return;
+      } catch {
+        // Fall through to opening a new window.
+      }
+    }
+
+    const newWin = window.open(link, "_blank", "noopener,noreferrer");
+    if (!newWin) {
+      // Popup blocked: fallback to same-tab navigation.
+      window.location.href = link;
+    }
   };
 
   const handleSubmit = async () => {
     if (findings.trim() && items.length > 0) {
       setIsSending(true);
+
+      // Pre-open WhatsApp window synchronously to prevent popup blocking
+      // (we'll redirect it after the async operations succeed).
+      if (sendNotification) {
+        pendingWhatsAppWindowRef.current = window.open(
+          "about:blank",
+          "_blank",
+          "noopener,noreferrer"
+        );
+      }
       
       try {
         // Upload images first
@@ -201,7 +237,8 @@ Ingresa con:
 
         // Open WhatsApp with pre-filled message if enabled
         if (sendNotification) {
-          openWhatsAppNotification();
+          const link = generateWhatsAppLink();
+          openWhatsAppLink(link);
         }
 
         setOpen(false);
@@ -215,6 +252,7 @@ Ingresa con:
         });
       } finally {
         setIsSending(false);
+        pendingWhatsAppWindowRef.current = null;
       }
     }
   };
