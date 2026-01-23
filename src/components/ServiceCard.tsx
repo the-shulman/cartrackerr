@@ -65,7 +65,14 @@ export function ServiceCard({ service, onStatusChange, onAddDiagnosticReport, on
       return;
     }
 
-    const win = window.open(link, "_blank", "noopener,noreferrer");
+    console.log("[WhatsApp] link:", link);
+    // Avoid `noopener` here: some environments end up on about:blank.
+    const win = window.open(link, "_blank");
+    try {
+      if (win) win.opener = null;
+    } catch {
+      // ignore
+    }
     if (!win) {
       window.location.href = link;
     }

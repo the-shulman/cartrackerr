@@ -211,11 +211,16 @@ Ingresa con:
       // Pre-open WhatsApp window synchronously to prevent popup blocking
       // (we'll redirect it after the async operations succeed).
       if (sendNotification) {
-        pendingWhatsAppWindowRef.current = window.open(
-          "about:blank",
-          "_blank",
-          "noopener,noreferrer"
-        );
+        // IMPORTANT: do NOT use `noopener` here; some browsers return a null/limited
+        // window reference which prevents us from setting `location.href` later, leaving
+        // the user on a blank tab.
+        const win = window.open("about:blank", "_blank");
+        try {
+          if (win) win.opener = null;
+        } catch {
+          // ignore
+        }
+        pendingWhatsAppWindowRef.current = win;
       }
       
       try {
@@ -238,6 +243,7 @@ Ingresa con:
         // Open WhatsApp with pre-filled message if enabled
         if (sendNotification) {
           const link = generateWhatsAppLink();
+          console.log("[WhatsApp] link:", link);
           openWhatsAppLink(link);
         }
 
