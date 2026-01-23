@@ -37,16 +37,22 @@ export function ServiceCard({ service, onStatusChange, onAddDiagnosticReport, on
 
   const formatPhoneForWhatsApp = (rawPhone: string): string => {
     // Remove all non-digits
-    let phone = rawPhone.replace(/\D/g, '');
+    const digits = rawPhone.replace(/\D/g, '');
     
-    // Handle Mexican phone numbers
-    if (phone.length === 10) {
-      phone = '52' + phone;
-    } else if (phone.length === 13 && phone.startsWith('521')) {
-      phone = '52' + phone.substring(3);
+    // Mexican mobile numbers need 521 prefix for WhatsApp
+    if (digits.length === 10) {
+      return `521${digits}`;
     }
     
-    return phone;
+    if (digits.length === 12 && digits.startsWith('52')) {
+      return `521${digits.slice(2)}`;
+    }
+    
+    if (digits.length === 13 && digits.startsWith('521')) {
+      return digits;
+    }
+    
+    return digits;
   };
 
   const openWhatsApp = () => {

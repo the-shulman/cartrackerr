@@ -130,22 +130,25 @@ export function DiagnosticReportDialog({ serviceId, service, onSubmit }: Diagnos
 
   const formatPhoneForWhatsApp = (rawPhone: string): string => {
     // Remove all non-digits
-    let phone = rawPhone.replace(/\D/g, '');
+    const digits = rawPhone.replace(/\D/g, '');
     
-    // Handle Mexican phone numbers
-    // Mexican numbers are 10 digits locally, need 52 prefix for WhatsApp
-    if (phone.length === 10) {
-      // Local Mexican number, add country code
-      phone = '52' + phone;
-    } else if (phone.length === 12 && phone.startsWith('52')) {
-      // Already has Mexico country code
-      // Keep as is
-    } else if (phone.length === 13 && phone.startsWith('521')) {
-      // Has old format with 1 after 52, remove the 1
-      phone = '52' + phone.substring(3);
+    // Mexican mobile numbers need 521 prefix for WhatsApp
+    // Input should be 10 digits (e.g., 5512345678)
+    if (digits.length === 10) {
+      return `521${digits}`;
     }
     
-    return phone;
+    // Already has country code, ensure it's 521 format
+    if (digits.length === 12 && digits.startsWith('52')) {
+      return `521${digits.slice(2)}`;
+    }
+    
+    if (digits.length === 13 && digits.startsWith('521')) {
+      return digits; // Already correct
+    }
+    
+    // Fallback: just return what we have
+    return digits;
   };
 
   const generateWhatsAppLink = () => {
