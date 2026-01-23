@@ -4,7 +4,7 @@ import { StatusBadge } from "./StatusBadge";
 import { StatusProgress } from "./StatusProgress";
 import { DiagnosticReportDialog } from "./DiagnosticReportDialog";
 import { ClientApprovalDialog } from "./ClientApprovalDialog";
-import { Car, Phone, User, Calendar, Wrench, DollarSign, CheckCircle2, Image, MessageCircle } from "lucide-react";
+import { Car, Phone, User, Calendar, Wrench, CheckCircle2, Image, MessageCircle } from "lucide-react";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";

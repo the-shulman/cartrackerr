@@ -47,7 +47,20 @@ export function openWhatsAppLink(link: string): void {
     window.matchMedia?.("(display-mode: standalone)")?.matches ||
     (window.navigator as any).standalone === true;
 
-  if (isStandalone) {
+  // iOS Safari/WebView can block cross-origin navigation when opened in a new tab/window
+  // (often surfacing as: "Navigation was blocked by Cross-Origin-Opener-Policy").
+  // For iOS, navigating in the SAME tab is the most reliable.
+  const ua = navigator.userAgent || "";
+  const isIOS = /iPad|iPhone|iPod/.test(ua);
+  const isInIFrame = (() => {
+    try {
+      return window.top !== window.self;
+    } catch {
+      return true;
+    }
+  })();
+
+  if (isStandalone || isIOS || isInIFrame) {
     // In standalone PWA, navigate directly
     window.location.href = link;
     return;
