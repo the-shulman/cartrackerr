@@ -8,6 +8,7 @@ import { Car, Phone, User, Calendar, Wrench, DollarSign, CheckCircle2, Image, Me
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { buildWhatsAppLink, openWhatsAppLink } from "@/lib/whatsapp";
 
 interface ServiceCardProps {
   service: Service;
@@ -35,53 +36,8 @@ export function ServiceCard({ service, onStatusChange, onAddDiagnosticReport, on
     return statusFlow[currentIndex + 1] as Service['status'];
   };
 
-  const formatPhoneForWhatsApp = (rawPhone: string): string => {
-    // Remove all non-digits
-    const digits = rawPhone.replace(/\D/g, '');
-    
-    // Mexican mobile numbers need 521 prefix for WhatsApp
-    if (digits.length === 10) {
-      return `521${digits}`;
-    }
-    
-    if (digits.length === 12 && digits.startsWith('52')) {
-      return `521${digits.slice(2)}`;
-    }
-    
-    if (digits.length === 13 && digits.startsWith('521')) {
-      return digits;
-    }
-    
-    return digits;
-  };
-
-  const openWhatsAppLink = (link: string) => {
-    const isStandalone =
-      window.matchMedia?.("(display-mode: standalone)")?.matches ||
-      (window.navigator as any).standalone === true;
-
-    if (isStandalone) {
-      window.location.href = link;
-      return;
-    }
-
-    console.log("[WhatsApp] link:", link);
-    // Avoid `noopener` here: some environments end up on about:blank.
-    const win = window.open(link, "_blank");
-    try {
-      if (win) win.opener = null;
-    } catch {
-      // ignore
-    }
-    if (!win) {
-      window.location.href = link;
-    }
-  };
-
-  const openWhatsApp = () => {
+  const handleOpenWhatsApp = () => {
     const portalUrl = `${window.location.origin}/track`;
-    const phone = formatPhoneForWhatsApp(service.clientPhone);
-    
     const message = `¡Hola ${service.clientName}! 🚗
 
 Te contactamos respecto a tu vehículo ${service.vehicleBrand} ${service.vehicleModel} (${service.vehiclePlate}).
@@ -93,7 +49,7 @@ Ingresa con:
 📱 Teléfono: ${service.clientPhone}
 🚘 Placa: ${service.vehiclePlate}`;
 
-    const link = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+    const link = buildWhatsAppLink(service.clientPhone, message);
     openWhatsAppLink(link);
   };
 
@@ -131,7 +87,7 @@ Ingresa con:
                     size="icon"
                     variant="ghost"
                     className="h-6 w-6 text-status-ready hover:text-status-ready/80"
-                    onClick={openWhatsApp}
+                    onClick={handleOpenWhatsApp}
                   >
                     <MessageCircle className="w-4 h-4" />
                   </Button>
