@@ -35,17 +35,24 @@ export function ServiceCard({ service, onStatusChange, onAddDiagnosticReport, on
     return statusFlow[currentIndex + 1] as Service['status'];
   };
 
-  const openWhatsApp = () => {
-    const portalUrl = `${window.location.origin}/track`;
+  const formatPhoneForWhatsApp = (rawPhone: string): string => {
+    // Remove all non-digits
+    let phone = rawPhone.replace(/\D/g, '');
     
-    // Format phone number - remove non-digits and ensure it starts with country code
-    let phone = service.clientPhone.replace(/\D/g, '');
-    // If phone doesn't start with country code, assume Mexico (+52)
-    if (!phone.startsWith('52') && !phone.startsWith('1')) {
+    // Handle Mexican phone numbers
+    if (phone.length === 10) {
       phone = '52' + phone;
+    } else if (phone.length === 13 && phone.startsWith('521')) {
+      phone = '52' + phone.substring(3);
     }
     
-    // Create a simple greeting message
+    return phone;
+  };
+
+  const openWhatsApp = () => {
+    const portalUrl = `${window.location.origin}/track`;
+    const phone = formatPhoneForWhatsApp(service.clientPhone);
+    
     const message = `¡Hola ${service.clientName}! 🚗
 
 Te contactamos respecto a tu vehículo ${service.vehicleBrand} ${service.vehicleModel} (${service.vehiclePlate}).
@@ -58,7 +65,7 @@ Ingresa con:
 🚘 Placa: ${service.vehiclePlate}`;
 
     const link = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
-    window.open(link, '_blank');
+    window.open(link, '_blank', 'noopener,noreferrer');
   };
 
   return (
