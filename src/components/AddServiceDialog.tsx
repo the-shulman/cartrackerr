@@ -91,13 +91,21 @@ export function AddServiceDialog({ onAdd }: AddServiceDialogProps) {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="clientPhone">Teléfono</Label>
+              <Label htmlFor="clientPhone">Teléfono (10 dígitos)</Label>
               <Input
                 id="clientPhone"
+                type="tel"
+                inputMode="numeric"
+                maxLength={10}
                 value={formData.clientPhone}
-                onChange={(e) => setFormData({ ...formData, clientPhone: e.target.value })}
+                onChange={(e) => {
+                  // Only allow digits
+                  const value = e.target.value.replace(/\D/g, '');
+                  setFormData({ ...formData, clientPhone: value });
+                }}
                 required
-                placeholder="+52 55 1234 5678"
+                pattern="[0-9]{10}"
+                placeholder="5512345678"
               />
             </div>
           </div>
