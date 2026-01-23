@@ -23,6 +23,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { DiagnosticItem, DiagnosticReport, Service } from "@/types/service";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { buildWhatsAppLink, openWhatsAppLink } from "@/lib/whatsapp";
 
 interface DiagnosticReportDialogProps {
   serviceId: string;
@@ -41,7 +42,6 @@ export function DiagnosticReportDialog({ serviceId, service, onSubmit }: Diagnos
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
   const [isUploadingImages, setIsUploadingImages] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const pendingWhatsAppWindowRef = useRef<Window | null>(null);
   const { toast } = useToast();
 
   const vehicleInfo = `${service.vehicleBrand} ${service.vehicleModel} (${service.vehiclePlate})`;
@@ -129,35 +129,9 @@ export function DiagnosticReportDialog({ serviceId, service, onSubmit }: Diagnos
     }
   };
 
-  const formatPhoneForWhatsApp = (rawPhone: string): string => {
-    // Remove all non-digits
-    const digits = rawPhone.replace(/\D/g, '');
-    
-    // Mexican mobile numbers need 521 prefix for WhatsApp
-    // Input should be 10 digits (e.g., 5512345678)
-    if (digits.length === 10) {
-      return `521${digits}`;
-    }
-    
-    // Already has country code, ensure it's 521 format
-    if (digits.length === 12 && digits.startsWith('52')) {
-      return `521${digits.slice(2)}`;
-    }
-    
-    if (digits.length === 13 && digits.startsWith('521')) {
-      return digits; // Already correct
-    }
-    
-    // Fallback: just return what we have
-    return digits;
-  };
-
-  const generateWhatsAppLink = () => {
+  const generateWhatsAppMessage = () => {
     const portalUrl = `${window.location.origin}/track`;
-    const phone = formatPhoneForWhatsApp(service.clientPhone);
-    
-    // Create the message
-    const message = `¡Hola ${service.clientName}! 🚗
+    return `¡Hola ${service.clientName}! 🚗
 
 El diagnóstico de tu vehículo ${service.vehicleBrand} ${service.vehicleModel} (${service.vehiclePlate}) está listo.
 
@@ -169,59 +143,15 @@ Ingresa con:
 🚘 Placa: ${service.vehiclePlate}
 
 ¡Gracias por tu preferencia!`;
-
-    // Create WhatsApp link
-    return `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
   };
 
-  const openWhatsAppLink = (link: string) => {
-    // In PWA/standalone mode, window.open often results in a blank page.
-    const isStandalone =
-      window.matchMedia?.("(display-mode: standalone)")?.matches ||
-      // iOS Safari
-      (window.navigator as any).standalone === true;
-
-    if (isStandalone) {
-      window.location.href = link;
-      return;
-    }
-
-    // If we pre-opened a window (to avoid popup blockers), reuse it.
-    const win = pendingWhatsAppWindowRef.current;
-    if (win && !win.closed) {
-      try {
-        win.location.href = link;
-        return;
-      } catch {
-        // Fall through to opening a new window.
-      }
-    }
-
-    const newWin = window.open(link, "_blank", "noopener,noreferrer");
-    if (!newWin) {
-      // Popup blocked: fallback to same-tab navigation.
-      window.location.href = link;
-    }
+  const getWhatsAppLink = () => {
+    return buildWhatsAppLink(service.clientPhone, generateWhatsAppMessage());
   };
 
   const handleSubmit = async () => {
     if (findings.trim() && items.length > 0) {
       setIsSending(true);
-
-      // Pre-open WhatsApp window synchronously to prevent popup blocking
-      // (we'll redirect it after the async operations succeed).
-      if (sendNotification) {
-        // IMPORTANT: do NOT use `noopener` here; some browsers return a null/limited
-        // window reference which prevents us from setting `location.href` later, leaving
-        // the user on a blank tab.
-        const win = window.open("about:blank", "_blank");
-        try {
-          if (win) win.opener = null;
-        } catch {
-          // ignore
-        }
-        pendingWhatsAppWindowRef.current = win;
-      }
       
       try {
         // Upload images first
@@ -242,8 +172,7 @@ Ingresa con:
 
         // Open WhatsApp with pre-filled message if enabled
         if (sendNotification) {
-          const link = generateWhatsAppLink();
-          console.log("[WhatsApp] link:", link);
+          const link = getWhatsAppLink();
           openWhatsAppLink(link);
         }
 
@@ -258,7 +187,6 @@ Ingresa con:
         });
       } finally {
         setIsSending(false);
-        pendingWhatsAppWindowRef.current = null;
       }
     }
   };
