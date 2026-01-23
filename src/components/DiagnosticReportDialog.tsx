@@ -128,15 +128,29 @@ export function DiagnosticReportDialog({ serviceId, service, onSubmit }: Diagnos
     }
   };
 
+  const formatPhoneForWhatsApp = (rawPhone: string): string => {
+    // Remove all non-digits
+    let phone = rawPhone.replace(/\D/g, '');
+    
+    // Handle Mexican phone numbers
+    // Mexican numbers are 10 digits locally, need 52 prefix for WhatsApp
+    if (phone.length === 10) {
+      // Local Mexican number, add country code
+      phone = '52' + phone;
+    } else if (phone.length === 12 && phone.startsWith('52')) {
+      // Already has Mexico country code
+      // Keep as is
+    } else if (phone.length === 13 && phone.startsWith('521')) {
+      // Has old format with 1 after 52, remove the 1
+      phone = '52' + phone.substring(3);
+    }
+    
+    return phone;
+  };
+
   const generateWhatsAppLink = () => {
     const portalUrl = `${window.location.origin}/track`;
-    
-    // Format phone number - remove non-digits and ensure it starts with country code
-    let phone = service.clientPhone.replace(/\D/g, '');
-    // If phone doesn't start with country code, assume Mexico (+52)
-    if (!phone.startsWith('52') && !phone.startsWith('1')) {
-      phone = '52' + phone;
-    }
+    const phone = formatPhoneForWhatsApp(service.clientPhone);
     
     // Create the message
     const message = `¡Hola ${service.clientName}! 🚗
@@ -158,7 +172,7 @@ Ingresa con:
 
   const openWhatsAppNotification = () => {
     const link = generateWhatsAppLink();
-    window.open(link, '_blank');
+    window.open(link, '_blank', 'noopener,noreferrer');
   };
 
   const handleSubmit = async () => {
