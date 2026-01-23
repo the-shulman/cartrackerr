@@ -128,23 +128,37 @@ export function DiagnosticReportDialog({ serviceId, service, onSubmit }: Diagnos
     }
   };
 
-  const sendSmsNotification = async () => {
+  const generateWhatsAppLink = () => {
     const portalUrl = `${window.location.origin}/track`;
     
-    const { data, error } = await supabase.functions.invoke('send-sms-notification', {
-      body: {
-        clientName: service.clientName,
-        clientPhone: service.clientPhone,
-        portalUrl,
-      },
-    });
-
-    if (error) {
-      console.error("SMS notification error:", error);
-      throw error;
+    // Format phone number - remove non-digits and ensure it starts with country code
+    let phone = service.clientPhone.replace(/\D/g, '');
+    // If phone doesn't start with country code, assume Mexico (+52)
+    if (!phone.startsWith('52') && !phone.startsWith('1')) {
+      phone = '52' + phone;
     }
+    
+    // Create the message
+    const message = `¡Hola ${service.clientName}! 🚗
 
-    return data;
+El diagnóstico de tu vehículo ${service.vehicleBrand} ${service.vehicleModel} (${service.vehiclePlate}) está listo.
+
+📋 Revisa los servicios recomendados y aprueba los que desees en nuestro portal:
+${portalUrl}
+
+Ingresa con:
+📱 Teléfono: ${service.clientPhone}
+🚘 Placa: ${service.vehiclePlate}
+
+¡Gracias por tu preferencia!`;
+
+    // Create WhatsApp link
+    return `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+  };
+
+  const openWhatsAppNotification = () => {
+    const link = generateWhatsAppLink();
+    window.open(link, '_blank');
   };
 
   const handleSubmit = async () => {
@@ -163,13 +177,14 @@ export function DiagnosticReportDialog({ serviceId, service, onSubmit }: Diagnos
           createdAt: new Date(),
         });
 
-        // Send SMS notification if enabled
+        toast({
+          title: "¡Reporte guardado!",
+          description: "Reporte diagnóstico enviado para aprobación.",
+        });
+
+        // Open WhatsApp with pre-filled message if enabled
         if (sendNotification) {
-          await sendSmsNotification();
-          toast({
-            title: "¡Notificación enviada!",
-            description: `SMS enviado a ${service.clientName}`,
-          });
+          openWhatsAppNotification();
         }
 
         setOpen(false);
@@ -177,14 +192,10 @@ export function DiagnosticReportDialog({ serviceId, service, onSubmit }: Diagnos
       } catch (error: any) {
         console.error("Error:", error);
         toast({
-          title: "Reporte guardado",
-          description: sendNotification 
-            ? "El reporte se guardó pero falló la notificación por SMS. El cliente puede acceder al portal." 
-            : "Reporte diagnóstico enviado para aprobación.",
-          variant: sendNotification ? "destructive" : "default",
+          title: "Error",
+          description: "Hubo un error al guardar el reporte. Intenta de nuevo.",
+          variant: "destructive",
         });
-        setOpen(false);
-        resetForm();
       } finally {
         setIsSending(false);
       }
@@ -352,8 +363,8 @@ export function DiagnosticReportDialog({ serviceId, service, onSubmit }: Diagnos
             )}
           </div>
 
-          {/* SMS notification option */}
-          <div className="flex items-center space-x-3 p-4 rounded-lg bg-muted/50 border">
+          {/* WhatsApp notification option */}
+          <div className="flex items-center space-x-3 p-4 rounded-lg bg-muted/50 border border-accent/30">
             <Checkbox
               id="send-notification"
               checked={sendNotification}
@@ -362,10 +373,10 @@ export function DiagnosticReportDialog({ serviceId, service, onSubmit }: Diagnos
             <div className="flex-1">
               <Label htmlFor="send-notification" className="cursor-pointer font-medium flex items-center gap-2">
                 <Send className="w-4 h-4 text-status-ready" />
-                Enviar notificación por SMS
+                Enviar notificación por WhatsApp
               </Label>
               <p className="text-sm text-muted-foreground">
-                Notificar a {service.clientName} por SMS con un enlace para aprobar los servicios
+                Se abrirá WhatsApp con el mensaje listo para enviar a {service.clientName}
               </p>
             </div>
           </div>
