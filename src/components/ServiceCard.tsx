@@ -4,8 +4,10 @@ import { StatusBadge } from "./StatusBadge";
 import { StatusProgress } from "./StatusProgress";
 import { DiagnosticReportDialog } from "./DiagnosticReportDialog";
 import { ClientApprovalDialog } from "./ClientApprovalDialog";
-import { Car, Phone, User, Calendar, Wrench, DollarSign, CheckCircle2, Image } from "lucide-react";
+import { Car, Phone, User, Calendar, Wrench, DollarSign, CheckCircle2, Image, MessageCircle } from "lucide-react";
 import { format } from "date-fns";
+import { Button } from "@/components/ui/button";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface ServiceCardProps {
   service: Service;
@@ -31,6 +33,32 @@ export function ServiceCard({ service, onStatusChange, onAddDiagnosticReport, on
     const statusFlow = ['received', 'diagnosing', 'awaiting_approval', 'in_progress', 'ready', 'delivered'];
     const currentIndex = statusFlow.indexOf(service.status);
     return statusFlow[currentIndex + 1] as Service['status'];
+  };
+
+  const openWhatsApp = () => {
+    const portalUrl = `${window.location.origin}/track`;
+    
+    // Format phone number - remove non-digits and ensure it starts with country code
+    let phone = service.clientPhone.replace(/\D/g, '');
+    // If phone doesn't start with country code, assume Mexico (+52)
+    if (!phone.startsWith('52') && !phone.startsWith('1')) {
+      phone = '52' + phone;
+    }
+    
+    // Create a simple greeting message
+    const message = `¡Hola ${service.clientName}! 🚗
+
+Te contactamos respecto a tu vehículo ${service.vehicleBrand} ${service.vehicleModel} (${service.vehiclePlate}).
+
+📋 Puedes consultar el estado de tu servicio en:
+${portalUrl}
+
+Ingresa con:
+📱 Teléfono: ${service.clientPhone}
+🚘 Placa: ${service.vehiclePlate}`;
+
+    const link = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+    window.open(link, '_blank');
   };
 
   return (
@@ -60,6 +88,23 @@ export function ServiceCard({ service, onStatusChange, onAddDiagnosticReport, on
           <div className="flex items-center gap-2">
             <Phone className="w-4 h-4 text-muted-foreground" />
             <span>{service.clientPhone}</span>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    className="h-6 w-6 text-status-ready hover:text-status-ready/80"
+                    onClick={openWhatsApp}
+                  >
+                    <MessageCircle className="w-4 h-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Enviar WhatsApp</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           </div>
           <div className="flex items-center gap-2">
             <Wrench className="w-4 h-4 text-muted-foreground" />
