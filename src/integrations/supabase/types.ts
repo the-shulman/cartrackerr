@@ -122,6 +122,14 @@ export type Database = {
         Args: { p_phone: string; p_plate: string }
         Returns: Json
       }
+      get_workshop_metrics: {
+        Args: {
+          p_end_date: string
+          p_start_date: string
+          p_workshop_id: string
+        }
+        Returns: Json
+      }
       lookup_service_by_phone_plate: {
         Args: { p_phone: string; p_plate: string }
         Returns: Json

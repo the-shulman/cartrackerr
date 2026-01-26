@@ -1,4 +1,4 @@
-import { Wrench, LogOut } from "lucide-react";
+import { Wrench, LogOut, BarChart3 } from "lucide-react";
 import { BrandingConfig } from "@/types/branding";
 import { SettingsDialog } from "@/components/SettingsDialog";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { useAuthContext } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface HeaderProps {
   branding: BrandingConfig;
@@ -48,6 +49,19 @@ export function Header({ branding, onUpdateBranding, onResetBranding }: HeaderPr
           </div>
         </div>
         <div className="flex items-center gap-2">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => navigate("/metricas")}
+                className="text-primary-foreground hover:bg-primary-foreground/10"
+              >
+                <BarChart3 className="w-5 h-5" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Métricas</TooltipContent>
+          </Tooltip>
           <ThemeToggle />
           <SettingsDialog 
             branding={branding} 
