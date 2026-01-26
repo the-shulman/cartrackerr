@@ -9,16 +9,18 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { ArrowLeft, Car, Calendar, FileText, CheckCircle2, Clock, Wrench, Image } from 'lucide-react';
+import { ArrowLeft, Car, Calendar, FileText, CheckCircle2, Clock, Wrench, Image, History } from 'lucide-react';
 import { format } from 'date-fns';
 
 interface ClientServiceViewProps {
   service: Service;
   onApprove: (serviceId: string, approvedItemIds: string[], clientNotes?: string) => void;
   onBack: () => void;
+  showHistoryButton?: boolean;
+  onShowHistory?: () => void;
 }
 
-export function ClientServiceView({ service, onApprove, onBack }: ClientServiceViewProps) {
+export function ClientServiceView({ service, onApprove, onBack, showHistoryButton, onShowHistory }: ClientServiceViewProps) {
   const [selectedItems, setSelectedItems] = useState<string[]>(
     service.diagnosticReport?.items
       .filter(item => item.priority === 'required' || item.approved)
@@ -63,10 +65,18 @@ export function ClientServiceView({ service, onApprove, onBack }: ClientServiceV
 
   return (
     <div className="max-w-2xl mx-auto space-y-4 md:space-y-6 pb-6">
-      <Button variant="ghost" onClick={onBack} className="mb-2 md:mb-4 -ml-2">
-        <ArrowLeft className="h-4 w-4 mr-2" />
-        Volver a Buscar
-      </Button>
+      <div className="flex items-center justify-between mb-2 md:mb-4">
+        <Button variant="ghost" onClick={onBack} className="-ml-2">
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          {showHistoryButton ? 'Ver Historial' : 'Volver a Buscar'}
+        </Button>
+        {showHistoryButton && onShowHistory && (
+          <Button variant="outline" size="sm" onClick={onShowHistory}>
+            <History className="h-4 w-4 mr-2" />
+            Historial
+          </Button>
+        )}
+      </div>
 
       {/* Vehicle Info Card */}
       <Card>

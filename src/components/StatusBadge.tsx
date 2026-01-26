@@ -1,8 +1,10 @@
 import { Badge } from "@/components/ui/badge";
 import { ServiceStatus, STATUS_LABELS } from "@/types/service";
+import { cn } from "@/lib/utils";
 
-interface StatusBadgeProps {
+export interface StatusBadgeProps {
   status: ServiceStatus;
+  size?: 'sm' | 'default';
 }
 
 const statusVariantMap: Record<ServiceStatus, "received" | "diagnosing" | "awaiting" | "progress" | "ready" | "delivered"> = {
@@ -14,9 +16,12 @@ const statusVariantMap: Record<ServiceStatus, "received" | "diagnosing" | "await
   delivered: "delivered",
 };
 
-export function StatusBadge({ status }: StatusBadgeProps) {
+export function StatusBadge({ status, size = 'default' }: StatusBadgeProps) {
   return (
-    <Badge variant={statusVariantMap[status]}>
+    <Badge 
+      variant={statusVariantMap[status]}
+      className={cn(size === 'sm' && 'text-xs px-2 py-0')}
+    >
       {STATUS_LABELS[status]}
     </Badge>
   );
