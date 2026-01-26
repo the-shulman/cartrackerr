@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Service, STATUS_LABELS } from '@/types/service';
 import { StatusProgress } from '@/components/StatusProgress';
 import { StatusBadge } from '@/components/StatusBadge';
+import { DownloadQuoteButton } from '@/components/DownloadQuoteButton';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -145,17 +146,20 @@ export function ClientServiceView({ service, onApprove, onBack, showHistoryButto
       {report && (
         <Card className={isAwaitingApproval ? 'ring-2 ring-status-awaiting' : ''}>
           <CardHeader>
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between flex-wrap gap-2">
               <CardTitle className="flex items-center gap-2 text-lg">
                 <FileText className="h-5 w-5" />
                 Reporte de Diagnóstico
               </CardTitle>
-              {hasApprovedReport && (
-                <Badge variant="default" className="bg-status-ready">
-                  <CheckCircle2 className="h-3 w-3 mr-1" />
-                  Aprobado
-                </Badge>
-              )}
+              <div className="flex items-center gap-2">
+                <DownloadQuoteButton service={service} />
+                {hasApprovedReport && (
+                  <Badge variant="default" className="bg-status-ready">
+                    <CheckCircle2 className="h-3 w-3 mr-1" />
+                    Aprobado
+                  </Badge>
+                )}
+              </div>
             </div>
             {isAwaitingApproval && (
               <CardDescription className="text-status-awaiting font-medium">
