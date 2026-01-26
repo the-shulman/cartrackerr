@@ -13,6 +13,7 @@ import NotFound from "./pages/NotFound";
 import ClientPortalPage from "./pages/ClientPortalPage";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import Metrics from "./pages/Metrics";
 
 const queryClient = new QueryClient();
 
@@ -35,6 +36,14 @@ const App = () => (
                   element={
                     <ProtectedRoute>
                       <Index />
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route 
+                  path="/metricas" 
+                  element={
+                    <ProtectedRoute>
+                      <Metrics />
                     </ProtectedRoute>
                   } 
                 />
