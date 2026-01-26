@@ -62,10 +62,15 @@ Ingresa con:
     try {
       const portalUrl = `${window.location.origin}/track`;
       
+      // Prepend Mexico country code for 10-digit numbers
+      const phoneWithCountryCode = service.clientPhone.length === 10 
+        ? `+52${service.clientPhone}` 
+        : service.clientPhone;
+
       const { data, error } = await supabase.functions.invoke('send-whatsapp-notification', {
         body: {
           clientName: service.clientName,
-          clientPhone: service.clientPhone,
+          clientPhone: phoneWithCountryCode,
           vehicleBrand: service.vehicleBrand,
           vehicleModel: service.vehicleModel,
           vehiclePlate: service.vehiclePlate,
