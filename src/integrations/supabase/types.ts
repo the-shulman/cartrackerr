@@ -14,6 +14,60 @@ export type Database = {
   }
   public: {
     Tables: {
+      maintenance_reminders: {
+        Row: {
+          client_name: string
+          client_phone: string
+          created_at: string
+          id: string
+          reminder_date: string
+          reminder_type: string
+          sent_at: string | null
+          service_id: string
+          vehicle_info: string
+          workshop_id: string
+        }
+        Insert: {
+          client_name: string
+          client_phone: string
+          created_at?: string
+          id?: string
+          reminder_date: string
+          reminder_type?: string
+          sent_at?: string | null
+          service_id: string
+          vehicle_info: string
+          workshop_id: string
+        }
+        Update: {
+          client_name?: string
+          client_phone?: string
+          created_at?: string
+          id?: string
+          reminder_date?: string
+          reminder_type?: string
+          sent_at?: string | null
+          service_id?: string
+          vehicle_info?: string
+          workshop_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "maintenance_reminders_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "maintenance_reminders_workshop_id_fkey"
+            columns: ["workshop_id"]
+            isOneToOne: false
+            referencedRelation: "workshops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       services: {
         Row: {
           client_name: string
@@ -23,6 +77,8 @@ export type Database = {
           diagnostic_report: Json | null
           estimated_completion: string | null
           id: string
+          next_maintenance_date: string | null
+          next_maintenance_km: number | null
           service_type: string
           status: string
           updated_at: string
@@ -40,6 +96,8 @@ export type Database = {
           diagnostic_report?: Json | null
           estimated_completion?: string | null
           id?: string
+          next_maintenance_date?: string | null
+          next_maintenance_km?: number | null
           service_type: string
           status?: string
           updated_at?: string
@@ -57,6 +115,8 @@ export type Database = {
           diagnostic_report?: Json | null
           estimated_completion?: string | null
           id?: string
+          next_maintenance_date?: string | null
+          next_maintenance_km?: number | null
           service_type?: string
           status?: string
           updated_at?: string

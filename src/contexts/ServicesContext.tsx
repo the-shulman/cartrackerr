@@ -10,7 +10,7 @@ interface ServicesContextType {
   workshopId: string | null;
   addService: (serviceData: Omit<Service, 'id' | 'createdAt' | 'updatedAt' | 'status'>) => Promise<void>;
   updateStatus: (id: string, newStatus: ServiceStatus) => Promise<void>;
-  addDiagnosticReport: (id: string, report: DiagnosticReport) => Promise<void>;
+  addDiagnosticReport: (id: string, report: DiagnosticReport, nextMaintenanceDate?: Date) => Promise<void>;
   approveServices: (id: string, approvedItemIds: string[], clientNotes?: string) => Promise<void>;
   getCounts: () => Record<ServiceStatus | 'all' | 'total', number>;
   refreshServices: () => Promise<void>;
@@ -236,7 +236,9 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const addDiagnosticReport = async (id: string, report: DiagnosticReport) => {
+  const addDiagnosticReport = async (id: string, report: DiagnosticReport, nextMaintenanceDate?: Date) => {
+    const service = services.find(s => s.id === id);
+    
     try {
       const dbReport = {
         findings: report.findings,
@@ -245,26 +247,59 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
         createdAt: report.createdAt.toISOString(),
       };
 
+      const updateData: any = {
+        diagnostic_report: dbReport,
+        status: 'awaiting_approval',
+      };
+
+      // Add next maintenance date if provided
+      if (nextMaintenanceDate) {
+        updateData.next_maintenance_date = nextMaintenanceDate.toISOString();
+      }
+
       const { error } = await supabase
         .from('services' as any)
-        .update({
-          diagnostic_report: dbReport,
-          status: 'awaiting_approval',
-        } as any)
+        .update(updateData)
         .eq('id', id);
 
       if (error) throw error;
 
+      // Create maintenance reminder if date is set and we have workshop ID
+      if (nextMaintenanceDate && workshopId && service) {
+        // Calculate reminder date (7 days before maintenance)
+        const reminderDate = new Date(nextMaintenanceDate);
+        reminderDate.setDate(reminderDate.getDate() - 7);
+
+        const vehicleInfo = `${service.vehicleBrand} ${service.vehicleModel} (${service.vehiclePlate})`;
+        
+        // Prepend Mexico country code for 10-digit numbers
+        const phoneWithCountryCode = service.clientPhone.length === 10 
+          ? `+52${service.clientPhone}` 
+          : service.clientPhone;
+
+        await supabase
+          .from('maintenance_reminders' as any)
+          .insert({
+            service_id: id,
+            workshop_id: workshopId,
+            client_phone: phoneWithCountryCode,
+            client_name: service.clientName,
+            vehicle_info: vehicleInfo,
+            reminder_date: reminderDate.toISOString().split('T')[0],
+            reminder_type: 'date',
+          } as any);
+      }
+
       // Optimistic update
-      setServices(prev => prev.map(service =>
-        service.id === id
+      setServices(prev => prev.map(s =>
+        s.id === id
           ? {
-              ...service,
+              ...s,
               status: 'awaiting_approval' as ServiceStatus,
               diagnosticReport: report,
               updatedAt: new Date(),
             }
-          : service
+          : s
       ));
     } catch (error) {
       console.error('Error adding diagnostic report:', error);

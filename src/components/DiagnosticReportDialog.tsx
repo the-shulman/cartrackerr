@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import { ClipboardList, Plus, Trash2, Send, Loader2, ImagePlus, X } from "lucide-react";
+import { ClipboardList, Plus, Trash2, Send, Loader2, ImagePlus, X, CalendarIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -20,15 +20,20 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { DiagnosticItem, DiagnosticReport, Service } from "@/types/service";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { buildWhatsAppLink, openWhatsAppLink } from "@/lib/whatsapp";
+import { format, addMonths } from "date-fns";
+import { es } from "date-fns/locale";
+import { cn } from "@/lib/utils";
 
 interface DiagnosticReportDialogProps {
   serviceId: string;
   service: Service;
-  onSubmit: (serviceId: string, report: DiagnosticReport) => void;
+  onSubmit: (serviceId: string, report: DiagnosticReport, nextMaintenanceDate?: Date) => void;
 }
 
 export function DiagnosticReportDialog({ serviceId, service, onSubmit }: DiagnosticReportDialogProps) {
@@ -41,6 +46,8 @@ export function DiagnosticReportDialog({ serviceId, service, onSubmit }: Diagnos
   const [images, setImages] = useState<File[]>([]);
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
   const [isUploadingImages, setIsUploadingImages] = useState(false);
+  const [nextMaintenanceDate, setNextMaintenanceDate] = useState<Date | undefined>(addMonths(new Date(), 6));
+  const [scheduleReminder, setScheduleReminder] = useState(true);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
@@ -157,17 +164,23 @@ Ingresa con:
         // Upload images first
         const uploadedImageUrls = await uploadImages();
         
-        // Submit the report with images
-        onSubmit(serviceId, {
-          findings: findings.trim(),
-          items,
-          images: uploadedImageUrls,
-          createdAt: new Date(),
-        });
+        // Submit the report with images and next maintenance date
+        onSubmit(
+          serviceId, 
+          {
+            findings: findings.trim(),
+            items,
+            images: uploadedImageUrls,
+            createdAt: new Date(),
+          },
+          scheduleReminder ? nextMaintenanceDate : undefined
+        );
 
         toast({
           title: "¡Reporte guardado!",
-          description: "Reporte diagnóstico enviado para aprobación.",
+          description: scheduleReminder && nextMaintenanceDate 
+            ? `Reporte enviado. Recordatorio programado para ${format(nextMaintenanceDate, "d 'de' MMMM yyyy", { locale: es })}.`
+            : "Reporte diagnóstico enviado para aprobación.",
         });
 
         // Open WhatsApp with pre-filled message if enabled
@@ -196,6 +209,8 @@ Ingresa con:
     setItems([]);
     setImages([]);
     setImagePreviews([]);
+    setNextMaintenanceDate(addMonths(new Date(), 6));
+    setScheduleReminder(true);
   };
 
   const totalEstimate = items.reduce((sum, item) => sum + item.price, 0);
@@ -348,6 +363,60 @@ Ingresa con:
                     </Button>
                   </div>
                 ))}
+              </div>
+            )}
+          </div>
+
+          {/* Next Maintenance Reminder */}
+          <div className="space-y-3 p-4 rounded-lg bg-primary/5 border border-primary/20">
+            <div className="flex items-center space-x-3">
+              <Checkbox
+                id="schedule-reminder"
+                checked={scheduleReminder}
+                onCheckedChange={(checked) => setScheduleReminder(checked === true)}
+              />
+              <div className="flex-1">
+                <Label htmlFor="schedule-reminder" className="cursor-pointer font-medium flex items-center gap-2">
+                  <CalendarIcon className="w-4 h-4 text-primary" />
+                  Programar recordatorio de mantenimiento
+                </Label>
+                <p className="text-sm text-muted-foreground">
+                  El cliente recibirá un recordatorio por WhatsApp
+                </p>
+              </div>
+            </div>
+            
+            {scheduleReminder && (
+              <div className="flex items-center gap-2 ml-7">
+                <Label className="text-sm whitespace-nowrap">Próximo servicio:</Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className={cn(
+                        "justify-start text-left font-normal",
+                        !nextMaintenanceDate && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {nextMaintenanceDate 
+                        ? format(nextMaintenanceDate, "d 'de' MMMM yyyy", { locale: es })
+                        : "Seleccionar fecha"
+                      }
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={nextMaintenanceDate}
+                      onSelect={setNextMaintenanceDate}
+                      disabled={(date) => date < new Date()}
+                      initialFocus
+                      className="p-3 pointer-events-auto"
+                    />
+                  </PopoverContent>
+                </Popover>
               </div>
             )}
           </div>
