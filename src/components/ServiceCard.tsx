@@ -5,6 +5,7 @@ import { StatusBadge } from "./StatusBadge";
 import { StatusProgress } from "./StatusProgress";
 import { DiagnosticReportDialog } from "./DiagnosticReportDialog";
 import { ClientApprovalDialog } from "./ClientApprovalDialog";
+import { DownloadQuoteButton } from "./DownloadQuoteButton";
 import { Car, Phone, User, Calendar, Wrench, CheckCircle2, Image, MessageCircle, Send, Loader2 } from "lucide-react";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
@@ -239,6 +240,9 @@ Ingresa con:
                   ${approvedTotal.toLocaleString('es-MX')} MXN
                 </span>
               </div>
+            </div>
+            <div className="mt-3 pt-2 border-t border-status-ready/30">
+              <DownloadQuoteButton service={service} variant="ghost" size="sm" className="w-full" />
             </div>
           </div>
         )}
