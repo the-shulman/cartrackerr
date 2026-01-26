@@ -13,8 +13,30 @@ interface NotificationRequest {
   vehicleBrand: string;
   vehicleModel: string;
   vehiclePlate: string;
+  serviceStatus: string;
   portalUrl: string;
 }
+
+// Status-specific message templates
+const STATUS_MESSAGES: Record<string, (name: string, vehicle: string, plate: string, url: string) => string> = {
+  received: (name, vehicle, plate, url) => 
+    `¡Hola ${name}! 🚗\n\nTu vehículo ha sido recibido en nuestro taller:\n\n🚙 ${vehicle}\n📋 Placas: ${plate}\n\nTe mantendremos informado sobre el progreso. Puedes consultar el estado en:\n${url}`,
+  
+  diagnosing: (name, vehicle, plate, url) => 
+    `¡Hola ${name}! 🔧\n\nEstamos diagnosticando tu vehículo:\n\n🚙 ${vehicle}\n📋 Placas: ${plate}\n\nTe notificaremos cuando tengamos el reporte listo. Consulta el estado en:\n${url}`,
+  
+  awaiting_approval: (name, vehicle, plate, url) => 
+    `¡Hola ${name}! 📋\n\nEl diagnóstico de tu vehículo está listo:\n\n🚙 ${vehicle}\n📋 Placas: ${plate}\n\n✅ Por favor revisa y aprueba los servicios recomendados:\n${url}\n\n¡Responde a este mensaje si tienes preguntas!`,
+  
+  in_progress: (name, vehicle, plate, url) => 
+    `¡Hola ${name}! ⚙️\n\nYa comenzamos a trabajar en tu vehículo:\n\n🚙 ${vehicle}\n📋 Placas: ${plate}\n\nTe avisaremos cuando esté listo. Consulta el progreso en:\n${url}`,
+  
+  ready: (name, vehicle, plate, url) => 
+    `¡Hola ${name}! 🎉\n\n¡Tu vehículo está listo para recoger!\n\n🚙 ${vehicle}\n📋 Placas: ${plate}\n\n📍 Te esperamos en el taller.\n\nDetalles del servicio:\n${url}`,
+  
+  delivered: (name, vehicle, plate, url) => 
+    `¡Hola ${name}! 🙏\n\n¡Gracias por confiar en nosotros!\n\n🚙 ${vehicle}\n📋 Placas: ${plate}\n\nEsperamos verte pronto. Consulta tu historial en:\n${url}`,
+};
 
 // Allowed country codes for phone number validation (E.164 format)
 const ALLOWED_COUNTRY_CODES = [
@@ -182,6 +204,7 @@ const handler = async (req: Request): Promise<Response> => {
       vehicleBrand,
       vehicleModel,
       vehiclePlate,
+      serviceStatus,
       portalUrl,
     }: NotificationRequest = await req.json();
 
@@ -266,7 +289,10 @@ const handler = async (req: Request): Promise<Response> => {
     const safeModel = vehicleModel.trim().slice(0, 50);
     const safePlate = vehiclePlate.trim().slice(0, 20);
 
-    const message = `Hi ${safeName}! 🚗\n\nYour vehicle diagnostic report is ready:\n\n🚙 ${safeBrand} ${safeModel}\n📋 Plate: ${safePlate}\n\nPlease review and approve the recommended services:\n${portalUrl}\n\nReply to this message if you have any questions!`;
+    // Generate status-specific message
+    const vehicle = `${safeBrand} ${safeModel}`;
+    const messageGenerator = STATUS_MESSAGES[serviceStatus] || STATUS_MESSAGES["awaiting_approval"];
+    const message = messageGenerator(safeName, vehicle, safePlate, portalUrl);
 
     const twilioUrl = `https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`;
 
