@@ -74,6 +74,7 @@ Ingresa con:
           vehicleBrand: service.vehicleBrand,
           vehicleModel: service.vehicleModel,
           vehiclePlate: service.vehiclePlate,
+          serviceStatus: service.status,
           portalUrl,
         },
       });
