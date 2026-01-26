@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Service, ServiceStatus } from '@/types/service';
 import { useBranding } from '@/hooks/useBranding';
 import { ClientServiceView } from '@/components/ClientServiceView';
+import { ServiceHistoryList } from '@/components/ServiceHistoryList';
 import { Car, Phone, Search, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -25,6 +26,7 @@ function dbResponseToService(data: any): Service {
     status: data.status as ServiceStatus,
     createdAt: new Date(data.created_at),
     updatedAt: new Date(data.updated_at),
+    estimatedCompletion: data.estimated_completion ? new Date(data.estimated_completion) : undefined,
     diagnosticReport: data.diagnostic_report ? {
       findings: data.diagnostic_report.findings,
       items: data.diagnostic_report.items || [],
@@ -36,19 +38,21 @@ function dbResponseToService(data: any): Service {
   };
 }
 
+type ViewMode = 'search' | 'history' | 'detail';
+
 export function ClientPortal() {
   const { branding } = useBranding();
   const { toast } = useToast();
   const [phone, setPhone] = useState('');
   const [plate, setPlate] = useState('');
-  const [foundService, setFoundService] = useState<Service | null>(null);
+  const [serviceHistory, setServiceHistory] = useState<Service[]>([]);
+  const [selectedService, setSelectedService] = useState<Service | null>(null);
+  const [viewMode, setViewMode] = useState<ViewMode>('search');
   const [searching, setSearching] = useState(false);
-  const [searched, setSearched] = useState(false);
   const [error, setError] = useState('');
 
   const handleSearch = async () => {
     setError('');
-    setSearched(true);
     setSearching(true);
 
     const normalizedPhone = phone.trim();
@@ -56,33 +60,43 @@ export function ClientPortal() {
 
     if (!normalizedPhone || !normalizedPlate) {
       setError('Por favor ingresa tu número de teléfono y placas');
-      setFoundService(null);
       setSearching(false);
       return;
     }
 
     try {
-      // Use the secure RPC function for server-side lookup
+      // Use the new RPC function to get full service history
       // @ts-ignore - RPC function exists but types aren't generated yet
-      const response = await supabase.rpc('lookup_service_by_phone_plate', {
+      const response = await supabase.rpc('get_client_service_history', {
         p_phone: normalizedPhone,
         p_plate: normalizedPlate,
       });
       
-      const { data, error: rpcError } = response as { data: any; error: any };
+      const { data, error: rpcError } = response as { data: any[] | null; error: any };
 
       if (rpcError) throw rpcError;
 
-      if (data) {
-        setFoundService(dbResponseToService(data));
+      if (data && data.length > 0) {
+        const services = data.map(dbResponseToService);
+        setServiceHistory(services);
+        
+        // If there's an active service (not delivered), show it first
+        const activeService = services.find(s => s.status !== 'delivered');
+        if (activeService) {
+          setSelectedService(activeService);
+          setViewMode('detail');
+        } else {
+          // Show history list if all services are delivered
+          setViewMode('history');
+        }
       } else {
-        setFoundService(null);
+        setServiceHistory([]);
         setError('No se encontró ningún servicio con el número de teléfono y placas proporcionados');
       }
     } catch (err) {
       console.error('Error looking up service:', err);
       setError('Ocurrió un error al buscar el servicio. Por favor, intenta de nuevo.');
-      setFoundService(null);
+      setServiceHistory([]);
     } finally {
       setSearching(false);
     }
@@ -90,7 +104,6 @@ export function ClientPortal() {
 
   const handleApproveServices = async (serviceId: string, approvedItemIds: string[], clientNotes?: string) => {
     try {
-      // Use the secure RPC function for server-side approval
       // @ts-ignore - RPC function exists but types aren't generated yet
       const response = await supabase.rpc('approve_service_items', {
         p_service_id: serviceId,
@@ -126,11 +139,25 @@ export function ClientPortal() {
   };
 
   const handleBack = () => {
-    setFoundService(null);
-    setSearched(false);
-    setPhone('');
-    setPlate('');
-    setError('');
+    if (viewMode === 'detail' && serviceHistory.length > 1) {
+      setViewMode('history');
+    } else {
+      setViewMode('search');
+      setSelectedService(null);
+      setServiceHistory([]);
+      setPhone('');
+      setPlate('');
+      setError('');
+    }
+  };
+
+  const handleSelectService = (service: Service) => {
+    setSelectedService(service);
+    setViewMode('detail');
+  };
+
+  const handleShowHistory = () => {
+    setViewMode('history');
   };
 
   return (
@@ -154,7 +181,7 @@ export function ClientPortal() {
       </header>
 
       <main className="container mx-auto px-4 py-6 md:py-8 flex-1">
-        {!foundService ? (
+        {viewMode === 'search' && (
           <div className="max-w-md mx-auto">
             <Card>
               <CardHeader className="text-center px-4 md:px-6">
@@ -195,7 +222,7 @@ export function ClientPortal() {
                   />
                 </div>
 
-                {error && searched && (
+                {error && (
                   <p className="text-sm text-destructive text-center">{error}</p>
                 )}
 
@@ -215,11 +242,24 @@ export function ClientPortal() {
               </CardContent>
             </Card>
           </div>
-        ) : (
+        )}
+
+        {viewMode === 'history' && (
+          <ServiceHistoryList
+            services={serviceHistory}
+            activeServiceId={selectedService?.id}
+            onSelectService={handleSelectService}
+            onBack={handleBack}
+          />
+        )}
+
+        {viewMode === 'detail' && selectedService && (
           <ClientServiceView 
-            service={foundService} 
+            service={selectedService} 
             onApprove={handleApproveServices}
             onBack={handleBack}
+            showHistoryButton={serviceHistory.length > 1}
+            onShowHistory={handleShowHistory}
           />
         )}
       </main>

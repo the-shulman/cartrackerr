@@ -118,6 +118,10 @@ export type Database = {
         }
         Returns: Json
       }
+      get_client_service_history: {
+        Args: { p_phone: string; p_plate: string }
+        Returns: Json
+      }
       lookup_service_by_phone_plate: {
         Args: { p_phone: string; p_plate: string }
         Returns: Json
