@@ -1,9 +1,9 @@
 import { Download, X, WifiOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { usePWA } from "@/hooks/usePWA";
-import { useState, useEffect, forwardRef } from "react";
+import { useState, useEffect } from "react";
 
-export const InstallPrompt = forwardRef<HTMLDivElement>((_, ref) => {
+export function InstallPrompt() {
   const { isInstallable, isOnline, installApp } = usePWA();
   const [dismissed, setDismissed] = useState(false);
   const [showOfflineToast, setShowOfflineToast] = useState(false);
@@ -36,7 +36,7 @@ export const InstallPrompt = forwardRef<HTMLDivElement>((_, ref) => {
       )}
 
       {/* Install banner */}
-      <div ref={ref} className="fixed bottom-4 left-4 right-4 z-50 md:left-auto md:right-4 md:w-80">
+      <div className="fixed bottom-4 left-4 right-4 z-50 md:left-auto md:right-4 md:w-80">
         <div className="bg-card border border-border rounded-xl shadow-elevated p-4 animate-slide-up">
           <div className="flex items-start gap-3">
             <div className="p-2 bg-primary/10 rounded-lg flex-shrink-0">
@@ -80,9 +80,7 @@ export const InstallPrompt = forwardRef<HTMLDivElement>((_, ref) => {
       </div>
     </>
   );
-});
-
-InstallPrompt.displayName = "InstallPrompt";
+}
 
 export function OfflineIndicator() {
   const { isOnline } = usePWA();
