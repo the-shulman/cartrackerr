@@ -150,49 +150,7 @@ CREATE TABLE public.maintenance_reminders (
 
 ## Fase 5: Sistema de Pagos/Anticipos con Stripe
 
-### Descripcion
-Permitir que los clientes paguen anticipos o el total del servicio aprobado directamente desde el portal.
-
-### Prerequisitos
-- Habilitar integracion de Stripe en Lovable
-- Configurar Stripe secret key
-
-### Cambios en Base de Datos
-- Nueva tabla `payments` para registrar pagos
-
-```sql
-CREATE TABLE public.payments (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  service_id uuid REFERENCES public.services(id) ON DELETE CASCADE,
-  workshop_id uuid REFERENCES public.workshops(id) ON DELETE CASCADE,
-  amount integer NOT NULL,
-  currency text DEFAULT 'mxn',
-  stripe_payment_intent_id text,
-  stripe_checkout_session_id text,
-  status text DEFAULT 'pending',
-  payment_type text DEFAULT 'deposit',
-  created_at timestamp with time zone DEFAULT now(),
-  completed_at timestamp with time zone
-);
-```
-
-### Edge Functions
-- `create-checkout-session`: Crea sesion de Stripe Checkout
-- `stripe-webhook`: Procesa eventos de Stripe (payment success/failure)
-
-### Cambios en Frontend
-- Boton "Pagar Anticipo" o "Pagar Total" en `ClientServiceView.tsx`
-- Nuevo componente `PaymentButton.tsx`
-- Pagina de confirmacion de pago `/payment-success`
-- Mostrar historial de pagos en el servicio
-- Badge de "Pagado" o "Anticipo Recibido" en `ServiceCard.tsx`
-
-### Seguridad
-- RLS policies para tabla `payments`
-- Validacion de montos en el backend
-- Webhook seguro con firma de Stripe
-
-### Tiempo Estimado: 6-8 horas
+**REMOVIDO** - Esta fase fue eliminada del plan por decisión del usuario.
 
 ---
 
