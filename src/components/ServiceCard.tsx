@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { Service, DiagnosticReport } from "@/types/service";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { StatusBadge } from "./StatusBadge";
@@ -6,13 +5,11 @@ import { StatusProgress } from "./StatusProgress";
 import { DiagnosticReportDialog } from "./DiagnosticReportDialog";
 import { ClientApprovalDialog } from "./ClientApprovalDialog";
 import { DownloadQuoteButton } from "./DownloadQuoteButton";
-import { Car, Phone, User, Calendar, Wrench, CheckCircle2, Image, MessageCircle, Send, Loader2 } from "lucide-react";
+import { Car, Phone, User, Calendar, Wrench, CheckCircle2, Image, MessageCircle } from "lucide-react";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { buildWhatsAppLink, openWhatsAppLink } from "@/lib/whatsapp";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
 
 interface ServiceCardProps {
   service: Service;
@@ -22,7 +19,6 @@ interface ServiceCardProps {
 }
 
 export function ServiceCard({ service, onStatusChange, onAddDiagnosticReport, onApproveServices }: ServiceCardProps) {
-  const [isSendingWhatsApp, setIsSendingWhatsApp] = useState(false);
   const vehicleInfo = `${service.vehicleBrand} ${service.vehicleModel} (${service.vehiclePlate})`;
   
   const approvedTotal = service.diagnosticReport?.items
@@ -56,58 +52,6 @@ Ingresa con:
 
     const link = buildWhatsAppLink(service.clientPhone, message);
     openWhatsAppLink(link);
-  };
-
-  const handleSendWhatsAppNotification = async () => {
-    setIsSendingWhatsApp(true);
-    try {
-      const portalUrl = `${window.location.origin}/track`;
-      
-      // Prepend Mexico country code for 10-digit numbers
-      const phoneWithCountryCode = service.clientPhone.length === 10 
-        ? `+52${service.clientPhone}` 
-        : service.clientPhone;
-
-      const { data, error } = await supabase.functions.invoke('send-whatsapp-notification', {
-        body: {
-          clientName: service.clientName,
-          clientPhone: phoneWithCountryCode,
-          vehicleBrand: service.vehicleBrand,
-          vehicleModel: service.vehicleModel,
-          vehiclePlate: service.vehiclePlate,
-          serviceStatus: service.status,
-          portalUrl,
-        },
-      });
-
-      if (error) {
-        throw new Error(error.message || 'Error al enviar notificación');
-      }
-
-      if (data?.error) {
-        throw new Error(data.error);
-      }
-
-      // Check delivery status for sandbox issues
-      if (data?.deliveryStatus?.status === 'failed' || data?.deliveryStatus?.error_code) {
-        const errorMsg = data.deliveryStatus.error_message || 'El mensaje no pudo ser entregado';
-        toast.warning('Mensaje enviado pero con problema', {
-          description: `${errorMsg}. Verifica que el cliente haya activado el sandbox de Twilio.`,
-        });
-      } else {
-        toast.success('¡Mensaje en cola!', {
-          description: `Enviado a ${service.clientName}. ⚠️ El cliente debe unirse al sandbox de Twilio para recibirlo.`,
-          duration: 8000,
-        });
-      }
-    } catch (error: any) {
-      console.error('Error sending WhatsApp:', error);
-      toast.error('Error al enviar WhatsApp', {
-        description: error.message || 'Intenta de nuevo más tarde',
-      });
-    } finally {
-      setIsSendingWhatsApp(false);
-    }
   };
 
   return (
@@ -151,28 +95,6 @@ Ingresa con:
                 </TooltipTrigger>
                 <TooltipContent>
                   <p>Abrir WhatsApp (manual)</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    className="h-6 w-6 text-primary hover:text-primary/80"
-                    onClick={handleSendWhatsAppNotification}
-                    disabled={isSendingWhatsApp}
-                  >
-                    {isSendingWhatsApp ? (
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                    ) : (
-                      <Send className="w-4 h-4" />
-                    )}
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Enviar WhatsApp automático</p>
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
