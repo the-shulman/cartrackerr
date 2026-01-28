@@ -95,8 +95,9 @@ Ingresa con:
           description: `${errorMsg}. Verifica que el cliente haya activado el sandbox de Twilio.`,
         });
       } else {
-        toast.success('¡Notificación WhatsApp enviada!', {
-          description: `Mensaje enviado a ${service.clientName}`,
+        toast.success('¡Mensaje en cola!', {
+          description: `Enviado a ${service.clientName}. ⚠️ El cliente debe unirse al sandbox de Twilio para recibirlo.`,
+          duration: 8000,
         });
       }
     } catch (error: any) {
