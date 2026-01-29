@@ -320,23 +320,37 @@ const handler = async (req: Request): Promise<Response> => {
 
     if (!response.ok) {
       const trimmed = responseText.trim();
+      let errorCode = 'UNKNOWN';
+      let internalMessage = '';
 
       // Try JSON first (Twilio can return JSON or XML depending on headers/errors)
       try {
         const errorData = JSON.parse(trimmed);
-        console.error("Twilio API error:", errorData);
-        const msg =
-          errorData.message || `Twilio error ${errorData.code || response.status}`;
-        throw new Error(msg);
+        errorCode = errorData.code?.toString() || response.status.toString();
+        internalMessage = errorData.message || '';
       } catch {
         // If not JSON, it's probably XML - extract error message
         const messageMatch = trimmed.match(/<Message>(.*?)<\/Message>/);
-        const errorMessage = messageMatch
-          ? messageMatch[1]
-          : `Twilio error ${response.status}`;
-        console.error("Twilio non-JSON error:", errorMessage);
-        throw new Error(errorMessage);
+        internalMessage = messageMatch ? messageMatch[1] : `HTTP ${response.status}`;
       }
+
+      // Log full details server-side for debugging
+      console.error("Twilio API error:", { code: errorCode, message: internalMessage });
+
+      // Map error codes to safe, user-friendly messages (no internal details exposed)
+      const errorMap: Record<string, string> = {
+        '21211': 'Formato de número telefónico inválido',
+        '21408': 'Número no configurado para WhatsApp',
+        '21606': 'Número no autorizado para este servicio',
+        '21610': 'No se pudo enviar el mensaje',
+        '21612': 'Número de teléfono no válido',
+        '21614': 'Número no habilitado para WhatsApp',
+        '20003': 'Servicio temporalmente no disponible',
+        '20429': 'Demasiadas solicitudes - intenta más tarde',
+        '63007': 'El destinatario debe enviar un mensaje primero (sandbox)',
+      };
+
+      throw new Error(errorMap[errorCode] || 'Error al enviar notificación. Verifica el número telefónico.');
     }
 
     // Parse successful response
