@@ -239,16 +239,33 @@ const handler = async (req: Request): Promise<Response> => {
 
     if (!response.ok) {
       const trimmed = responseText.trim();
+      let errorCode = 'UNKNOWN';
+      let internalMessage = '';
+
       try {
         const errorData = JSON.parse(trimmed);
-        console.error("Twilio API error:", errorData);
-        throw new Error(errorData.message || `Twilio error ${errorData.code || response.status}`);
+        errorCode = errorData.code?.toString() || response.status.toString();
+        internalMessage = errorData.message || '';
       } catch {
         const messageMatch = trimmed.match(/<Message>(.*?)<\/Message>/);
-        const errorMessage = messageMatch ? messageMatch[1] : `Twilio error ${response.status}`;
-        console.error("Twilio non-JSON error:", errorMessage);
-        throw new Error(errorMessage);
+        internalMessage = messageMatch ? messageMatch[1] : `HTTP ${response.status}`;
       }
+
+      // Log full details server-side for debugging
+      console.error("Twilio API error:", { code: errorCode, message: internalMessage });
+
+      // Map error codes to safe, user-friendly messages (no internal details exposed)
+      const errorMap: Record<string, string> = {
+        '21211': 'Formato de número telefónico inválido',
+        '21408': 'Número no válido para este servicio',
+        '21606': 'Número no autorizado para este servicio',
+        '21610': 'No se pudo enviar el mensaje',
+        '21612': 'Número de teléfono no válido',
+        '20003': 'Servicio temporalmente no disponible',
+        '20429': 'Demasiadas solicitudes - intenta más tarde',
+      };
+
+      throw new Error(errorMap[errorCode] || 'Error al enviar notificación. Verifica el número telefónico.');
     }
 
     let result;

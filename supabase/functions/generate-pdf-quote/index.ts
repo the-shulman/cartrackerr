@@ -1,5 +1,6 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.7";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -188,6 +189,58 @@ serve(async (req) => {
   }
 
   try {
+    // Authentication: Verify the user is logged in
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader?.startsWith("Bearer ")) {
+      return new Response(
+        JSON.stringify({ error: "Unauthorized: Missing or invalid authorization header" }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const supabaseUrl = Deno.env.get("SUPABASE_URL");
+    const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY");
+
+    if (!supabaseUrl || !supabaseAnonKey) {
+      console.error("Missing Supabase configuration");
+      return new Response(
+        JSON.stringify({ error: "Server configuration error" }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const supabaseClient = createClient(supabaseUrl, supabaseAnonKey, {
+      global: { headers: { Authorization: authHeader } },
+    });
+
+    // Verify the user is authenticated
+    const { data: userData, error: authError } = await supabaseClient.auth.getUser();
+
+    if (authError || !userData.user) {
+      console.error("Authentication failed:", authError?.message || "No user found");
+      return new Response(
+        JSON.stringify({ error: "Unauthorized: Invalid or expired token" }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Verify user has a workshop (authorization check)
+    const { data: workshop, error: workshopError } = await supabaseClient
+      .from("workshops")
+      .select("id")
+      .eq("user_id", userData.user.id)
+      .maybeSingle();
+
+    if (workshopError || !workshop) {
+      console.error("Workshop verification failed:", workshopError?.message || "No workshop found");
+      return new Response(
+        JSON.stringify({ error: "Unauthorized: User does not own a workshop" }),
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    console.log("Authorized workshop:", workshop.id);
+
     const data: QuoteRequest = await req.json();
 
     // Validate required fields
