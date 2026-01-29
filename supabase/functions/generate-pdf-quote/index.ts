@@ -30,6 +30,16 @@ interface QuoteRequest {
   portalUrl?: string;
 }
 
+function escapeHtml(unsafe: string): string {
+  if (!unsafe) return '';
+  return unsafe
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
 function formatCurrency(amount: number): string {
   return new Intl.NumberFormat('es-MX', {
     style: 'currency',
@@ -47,6 +57,19 @@ function formatDate(dateStr: string): string {
 }
 
 function generateQuoteHTML(data: QuoteRequest): string {
+  // Escape all user-provided data to prevent XSS
+  const safeWorkshopName = escapeHtml(data.workshopName);
+  const safeWorkshopPhone = data.workshopPhone ? escapeHtml(data.workshopPhone) : '';
+  const safeClientName = escapeHtml(data.clientName);
+  const safeClientPhone = escapeHtml(data.clientPhone);
+  const safeVehicleBrand = escapeHtml(data.vehicleBrand);
+  const safeVehicleModel = escapeHtml(data.vehicleModel);
+  const safeVehiclePlate = escapeHtml(data.vehiclePlate);
+  const safeVehicleYear = escapeHtml(data.vehicleYear);
+  const safeServiceType = escapeHtml(data.serviceType);
+  const safeFindings = escapeHtml(data.findings);
+  const safePortalUrl = data.portalUrl ? escapeHtml(data.portalUrl) : '';
+
   const requiredItems = data.items.filter(i => i.priority === 'required');
   const recommendedItems = data.items.filter(i => i.priority === 'recommended');
   const optionalItems = data.items.filter(i => i.priority === 'optional');
@@ -58,10 +81,10 @@ function generateQuoteHTML(data: QuoteRequest): string {
     if (items.length === 0) return '';
     return `
       <div style="margin-bottom: 20px;">
-        <h3 style="color: #374151; margin-bottom: 10px; font-size: 14px;">${title}</h3>
+        <h3 style="color: #374151; margin-bottom: 10px; font-size: 14px;">${escapeHtml(title)}</h3>
         ${items.map(item => `
           <div style="display: flex; justify-content: space-between; padding: 12px; background: ${bgColor}; border-radius: 6px; margin-bottom: 8px;">
-            <span style="color: #374151;">${item.description}</span>
+            <span style="color: #374151;">${escapeHtml(item.description)}</span>
             <span style="font-weight: 600; color: #1f2937;">${formatCurrency(item.price)}</span>
           </div>
         `).join('')}
@@ -93,8 +116,8 @@ function generateQuoteHTML(data: QuoteRequest): string {
     <div class="header">
       <div style="display: flex; justify-content: space-between; align-items: center;">
         <div>
-          <div class="logo">🔧 ${data.workshopName}</div>
-          ${data.workshopPhone ? `<div style="color: #6b7280; margin-top: 5px;">Tel: ${data.workshopPhone}</div>` : ''}
+          <div class="logo">🔧 ${safeWorkshopName}</div>
+          ${safeWorkshopPhone ? `<div style="color: #6b7280; margin-top: 5px;">Tel: ${safeWorkshopPhone}</div>` : ''}
         </div>
         <div style="text-align: right;">
           <div style="font-size: 12px; color: #6b7280;">PRESUPUESTO</div>
@@ -106,19 +129,19 @@ function generateQuoteHTML(data: QuoteRequest): string {
     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-bottom: 30px;">
       <div style="background: #f9fafb; padding: 20px; border-radius: 8px;">
         <h3 style="color: #6b7280; font-size: 12px; text-transform: uppercase; margin-bottom: 10px;">Datos del Cliente</h3>
-        <div style="font-weight: 600; font-size: 16px;">${data.clientName}</div>
-        <div style="color: #6b7280;">${data.clientPhone}</div>
+        <div style="font-weight: 600; font-size: 16px;">${safeClientName}</div>
+        <div style="color: #6b7280;">${safeClientPhone}</div>
       </div>
       <div style="background: #f9fafb; padding: 20px; border-radius: 8px;">
         <h3 style="color: #6b7280; font-size: 12px; text-transform: uppercase; margin-bottom: 10px;">Datos del Vehículo</h3>
-        <div style="font-weight: 600; font-size: 16px;">${data.vehicleBrand} ${data.vehicleModel}</div>
-        <div style="color: #6b7280;">Placas: ${data.vehiclePlate} • Año: ${data.vehicleYear}</div>
+        <div style="font-weight: 600; font-size: 16px;">${safeVehicleBrand} ${safeVehicleModel}</div>
+        <div style="color: #6b7280;">Placas: ${safeVehiclePlate} • Año: ${safeVehicleYear}</div>
       </div>
     </div>
 
     <div style="background: #eff6ff; padding: 20px; border-radius: 8px; margin-bottom: 30px;">
-      <h3 style="color: #3b82f6; font-size: 14px; margin-bottom: 10px;">📋 Tipo de Servicio: ${data.serviceType}</h3>
-      <p style="color: #374151; margin: 0;">${data.findings}</p>
+      <h3 style="color: #3b82f6; font-size: 14px; margin-bottom: 10px;">📋 Tipo de Servicio: ${safeServiceType}</h3>
+      <p style="color: #374151; margin: 0;">${safeFindings}</p>
     </div>
 
     <h2 style="color: #1f2937; margin-bottom: 20px;">Detalle de Servicios</h2>
@@ -146,10 +169,10 @@ function generateQuoteHTML(data: QuoteRequest): string {
         <li>El tiempo de entrega se confirmará al aprobar el servicio.</li>
         <li>Se requiere 50% de anticipo para iniciar los trabajos.</li>
       </ul>
-      ${data.portalUrl ? `
+      ${safePortalUrl ? `
       <p style="margin-top: 20px; padding: 15px; background: #f0fdf4; border-radius: 6px; text-align: center;">
         📱 <strong>Aprueba tu servicio en línea:</strong><br>
-        <a href="${data.portalUrl}" style="color: #3b82f6;">${data.portalUrl}</a>
+        <a href="${safePortalUrl}" style="color: #3b82f6;">${safePortalUrl}</a>
       </p>
       ` : ''}
     </div>
@@ -171,6 +194,17 @@ serve(async (req) => {
     if (!data.workshopName || !data.clientName || !data.items) {
       return new Response(
         JSON.stringify({ error: 'Missing required fields' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Input length validation to prevent abuse
+    if (data.clientName.length > 200 ||
+        data.workshopName.length > 200 ||
+        (data.findings && data.findings.length > 5000) ||
+        data.items.some(i => i.description.length > 500)) {
+      return new Response(
+        JSON.stringify({ error: 'Input exceeds maximum length' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }

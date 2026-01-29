@@ -14,6 +14,24 @@ serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    
+    // Authentication: Verify request has valid service role key or cron secret
+    const authHeader = req.headers.get('Authorization');
+    const cronSecret = Deno.env.get('CRON_SECRET');
+    const xCronSecret = req.headers.get('x-cron-secret');
+    
+    const isServiceRoleAuth = authHeader === `Bearer ${supabaseServiceKey}`;
+    const isCronSecretAuth = cronSecret && xCronSecret === cronSecret;
+    
+    // Only allow authenticated requests (from pg_cron or with valid service role key)
+    if (!isServiceRoleAuth && !isCronSecretAuth) {
+      console.log('Unauthorized access attempt to schedule-maintenance-reminders');
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized: Valid authentication required' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+    
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     // Get today's date
