@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Car, Mail, Lock, Building2, Loader2 } from "lucide-react";
+import { Car, Mail, Lock, Building2, Loader2, Phone } from "lucide-react";
 import { toast } from "sonner";
 
 const Register = () => {
@@ -14,7 +14,19 @@ const Register = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [workshopName, setWorkshopName] = useState("");
+  const [phone, setPhone] = useState("");
   const [loading, setLoading] = useState(false);
+
+  const validatePhone = (value: string) => {
+    // Only allow digits
+    const digitsOnly = value.replace(/\D/g, "");
+    // Limit to 10 digits
+    return digitsOnly.slice(0, 10);
+  };
+
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setPhone(validatePhone(e.target.value));
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -24,9 +36,14 @@ const Register = () => {
       return;
     }
 
+    if (phone.length !== 10) {
+      toast.error("El número de celular debe tener 10 dígitos");
+      return;
+    }
+
     setLoading(true);
 
-    const { error } = await signUp(email, password, workshopName);
+    const { error } = await signUp(email, password, workshopName, phone);
 
     if (error) {
       toast.error("Error al registrarse: " + error.message);
@@ -68,6 +85,25 @@ const Register = () => {
                   required
                 />
               </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="phone">Número de Celular (WhatsApp)</Label>
+              <div className="relative">
+                <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  id="phone"
+                  type="tel"
+                  placeholder="5512345678"
+                  value={phone}
+                  onChange={handlePhoneChange}
+                  className="pl-9"
+                  required
+                  maxLength={10}
+                />
+              </div>
+              <p className="text-xs text-muted-foreground">
+                10 dígitos sin espacios ni guiones. Se usará para notificaciones automáticas.
+              </p>
             </div>
             <div className="space-y-2">
               <Label htmlFor="email">Correo Electrónico</Label>
