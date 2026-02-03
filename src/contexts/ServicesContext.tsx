@@ -22,6 +22,7 @@ interface ServicesContextType {
   approveServices: (id: string, approvedItemIds: string[], clientNotes?: string) => Promise<void>;
   getCounts: () => Record<ServiceStatus | 'all' | 'total', number>;
   refreshServices: () => Promise<void>;
+  refreshWorkshopInfo: () => Promise<void>;
   sendWhatsAppNotification: (service: Service, status: ServiceStatus) => Promise<boolean>;
 }
 
@@ -111,6 +112,11 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
 
     return null;
   }, [user]);
+
+  // Refresh workshop info (exposed for settings updates)
+  const refreshWorkshopInfo = useCallback(async () => {
+    await fetchWorkshopInfo();
+  }, [fetchWorkshopInfo]);
 
   // Fetch services from database using raw query since types aren't generated yet
   const fetchServices = useCallback(async () => {
@@ -477,6 +483,7 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
       approveServices,
       getCounts,
       refreshServices,
+      refreshWorkshopInfo,
       sendWhatsAppNotification,
     }}>
       {children}
