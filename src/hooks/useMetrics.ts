@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuthContext } from "@/contexts/AuthContext";
 import { subDays, format } from "date-fns";
@@ -29,12 +29,19 @@ export function useMetrics() {
     startDate: subDays(new Date(), 30),
     endDate: new Date(),
   });
+  const abortControllerRef = useRef<AbortController | null>(null);
 
-  const fetchMetrics = async () => {
+  const fetchMetrics = useCallback(async () => {
     if (!user) {
       setLoading(false);
       return;
     }
+
+    // Cancel any previous request
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    abortControllerRef.current = new AbortController();
 
     setLoading(true);
     setError(null);
@@ -61,17 +68,27 @@ export function useMetrics() {
       // Parse the response
       const metricsData = data as unknown as WorkshopMetrics;
       setMetrics(metricsData);
-    } catch (err) {
+    } catch (err: unknown) {
+      // Ignore abort errors
+      if (err instanceof Error && err.name === "AbortError") {
+        return;
+      }
       console.error("Error fetching metrics:", err);
       setError("Error al cargar las métricas");
     } finally {
       setLoading(false);
     }
-  };
+  }, [user, dateRange]);
 
   useEffect(() => {
     fetchMetrics();
-  }, [user, dateRange]);
+
+    return () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
+  }, [fetchMetrics]);
 
   return {
     metrics,
