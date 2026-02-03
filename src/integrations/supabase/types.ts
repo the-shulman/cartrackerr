@@ -182,6 +182,7 @@ export type Database = {
         Args: { p_phone: string; p_plate: string }
         Returns: Json
       }
+      get_email_by_phone: { Args: { p_phone: string }; Returns: string }
       get_workshop_metrics: {
         Args: {
           p_end_date: string
