@@ -14,6 +14,7 @@ import ClientPortalPage from "./pages/ClientPortalPage";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Metrics from "./pages/Metrics";
+import Subscription from "./pages/Subscription";
 
 const queryClient = new QueryClient();
 
@@ -31,6 +32,14 @@ const App = () => (
                 <Route path="/login" element={<Login />} />
                 <Route path="/registro" element={<Register />} />
                 <Route path="/track" element={<ClientPortalPage />} />
+                <Route 
+                  path="/suscripcion" 
+                  element={
+                    <ProtectedRoute requireSubscription={false}>
+                      <Subscription />
+                    </ProtectedRoute>
+                  } 
+                />
                 <Route 
                   path="/" 
                   element={
