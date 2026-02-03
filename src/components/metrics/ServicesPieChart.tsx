@@ -1,5 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from "recharts";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface ServicesPieChartProps {
   data: { status: string; count: number }[];
@@ -11,6 +12,15 @@ const STATUS_LABELS: Record<string, string> = {
   received: "Recibido",
   diagnosing: "Diagnosticando",
   awaiting_approval: "Esperando Aprobación",
+  in_progress: "En Progreso",
+  ready: "Listo",
+  delivered: "Entregado",
+};
+
+const STATUS_LABELS_SHORT: Record<string, string> = {
+  received: "Recibido",
+  diagnosing: "Diagnóstico",
+  awaiting_approval: "Esperando",
   in_progress: "En Progreso",
   ready: "Listo",
   delivered: "Entregado",
@@ -30,6 +40,20 @@ const SERVICE_TYPE_LABELS: Record<string, string> = {
   other: "Otro",
 };
 
+const SERVICE_TYPE_LABELS_SHORT: Record<string, string> = {
+  oil_change: "Aceite",
+  brake_service: "Frenos",
+  tire_rotation: "Llantas",
+  general_maintenance: "Manto. Gral",
+  engine_repair: "Motor",
+  transmission: "Transmisión",
+  electrical: "Eléctrico",
+  suspension: "Suspensión",
+  air_conditioning: "A/C",
+  diagnostics: "Diagnóstico",
+  other: "Otro",
+};
+
 const COLORS = [
   "hsl(var(--primary))",
   "hsl(var(--accent))",
@@ -42,17 +66,23 @@ const COLORS = [
 ];
 
 export function ServicesPieChart({ data, title, dataKey = "status" }: ServicesPieChartProps) {
+  const isMobile = useIsMobile();
+  
   const formattedData = data.map((item, index) => {
     let name: string;
+    let shortName: string;
+    
     if (dataKey === "status") {
       name = STATUS_LABELS[item.status] || item.status;
+      shortName = STATUS_LABELS_SHORT[item.status] || item.status;
     } else {
-      // For type data, item.status actually contains the type value
       name = SERVICE_TYPE_LABELS[item.status] || item.status;
+      shortName = SERVICE_TYPE_LABELS_SHORT[item.status] || item.status;
     }
     
     return {
-      name,
+      name: isMobile ? shortName : name,
+      fullName: name,
       value: item.count,
       fill: COLORS[index % COLORS.length],
     };
@@ -60,41 +90,49 @@ export function ServicesPieChart({ data, title, dataKey = "status" }: ServicesPi
 
   return (
     <Card>
-      <CardHeader>
-        <CardTitle className="text-lg">{title}</CardTitle>
+      <CardHeader className="pb-2">
+        <CardTitle className="text-base md:text-lg">{title}</CardTitle>
       </CardHeader>
-      <CardContent>
-        <div className="h-[300px]">
+      <CardContent className="p-2 md:p-6">
+        <div className="h-[280px] md:h-[300px]">
           {data.length > 0 ? (
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
                   data={formattedData}
                   cx="50%"
-                  cy="50%"
-                  innerRadius={60}
-                  outerRadius={100}
+                  cy="45%"
+                  innerRadius={isMobile ? 40 : 60}
+                  outerRadius={isMobile ? 70 : 100}
                   paddingAngle={2}
                   dataKey="value"
-                  label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
-                  labelLine={false}
                 >
                   {formattedData.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={entry.fill} />
                   ))}
                 </Pie>
                 <Tooltip
-                  formatter={(value: number) => [value, "Servicios"]}
+                  formatter={(value: number, _name, props) => [
+                    `${value} servicios`,
+                    props.payload.fullName
+                  ]}
                   contentStyle={{
                     backgroundColor: "hsl(var(--card))",
                     borderColor: "hsl(var(--border))",
                     borderRadius: "8px",
+                    fontSize: isMobile ? "12px" : "14px",
                   }}
                 />
                 <Legend 
                   verticalAlign="bottom" 
-                  height={36}
-                  formatter={(value) => <span className="text-sm text-foreground">{value}</span>}
+                  height={isMobile ? 60 : 36}
+                  wrapperStyle={{
+                    fontSize: isMobile ? "10px" : "12px",
+                    paddingTop: "8px",
+                  }}
+                  formatter={(value) => (
+                    <span className="text-foreground">{value}</span>
+                  )}
                 />
               </PieChart>
             </ResponsiveContainer>
