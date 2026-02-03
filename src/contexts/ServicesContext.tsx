@@ -4,16 +4,25 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuthContext } from './AuthContext';
 import { useToast } from '@/hooks/use-toast';
 
+interface Workshop {
+  id: string;
+  phone: string | null;
+  workshop_name: string;
+}
+
 interface ServicesContextType {
   services: Service[];
   loading: boolean;
   workshopId: string | null;
+  workshopPhone: string | null;
+  workshopName: string | null;
   addService: (serviceData: Omit<Service, 'id' | 'createdAt' | 'updatedAt' | 'status'>) => Promise<void>;
-  updateStatus: (id: string, newStatus: ServiceStatus) => Promise<void>;
+  updateStatus: (id: string, newStatus: ServiceStatus, sendNotification?: boolean) => Promise<void>;
   addDiagnosticReport: (id: string, report: DiagnosticReport, nextMaintenanceDate?: Date) => Promise<void>;
   approveServices: (id: string, approvedItemIds: string[], clientNotes?: string) => Promise<void>;
   getCounts: () => Record<ServiceStatus | 'all' | 'total', number>;
   refreshServices: () => Promise<void>;
+  sendWhatsAppNotification: (service: Service, status: ServiceStatus) => Promise<boolean>;
 }
 
 const ServicesContext = createContext<ServicesContextType | undefined>(undefined);
@@ -68,21 +77,25 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
   const [services, setServices] = useState<Service[]>([]);
   const [loading, setLoading] = useState(true);
   const [workshopId, setWorkshopId] = useState<string | null>(null);
-  const { user } = useAuthContext();
+  const [workshopPhone, setWorkshopPhone] = useState<string | null>(null);
+  const [workshopName, setWorkshopName] = useState<string | null>(null);
+  const { user, session } = useAuthContext();
   const { toast } = useToast();
 
-  // Fetch workshop ID for the current user
-  const fetchWorkshopId = useCallback(async () => {
+  // Fetch workshop info for the current user
+  const fetchWorkshopInfo = useCallback(async () => {
     if (!user) {
       setWorkshopId(null);
+      setWorkshopPhone(null);
+      setWorkshopName(null);
       return null;
     }
 
     const { data, error } = await supabase
       .from('workshops')
-      .select('id')
+      .select('id, phone, workshop_name')
       .eq('user_id', user.id)
-      .maybeSingle();
+      .maybeSingle() as { data: Workshop | null; error: any };
 
     if (error) {
       console.error('Error fetching workshop:', error);
@@ -91,6 +104,8 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
 
     if (data) {
       setWorkshopId(data.id);
+      setWorkshopPhone(data.phone);
+      setWorkshopName(data.workshop_name);
       return data.id;
     }
 
@@ -132,11 +147,11 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
   // Initialize on user change
   useEffect(() => {
     const init = async () => {
-      await fetchWorkshopId();
+      await fetchWorkshopInfo();
       await fetchServices();
     };
     init();
-  }, [fetchWorkshopId, fetchServices]);
+  }, [fetchWorkshopInfo, fetchServices]);
 
   // Set up realtime subscription
   useEffect(() => {
@@ -211,7 +226,49 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const updateStatus = async (id: string, newStatus: ServiceStatus) => {
+  // Send WhatsApp notification for a service status change
+  const sendWhatsAppNotification = async (service: Service, status: ServiceStatus): Promise<boolean> => {
+    if (!session?.access_token) {
+      console.error('No session token available');
+      return false;
+    }
+
+    // Format phone with country code for WhatsApp
+    const phoneWithCountryCode = service.clientPhone.length === 10
+      ? `+52${service.clientPhone}`
+      : service.clientPhone;
+
+    const portalUrl = `${window.location.origin}/portal?phone=${encodeURIComponent(service.clientPhone)}&plate=${encodeURIComponent(service.vehiclePlate)}`;
+
+    try {
+      const { data, error } = await supabase.functions.invoke('send-whatsapp-notification', {
+        body: {
+          clientName: service.clientName,
+          clientPhone: phoneWithCountryCode,
+          vehicleBrand: service.vehicleBrand,
+          vehicleModel: service.vehicleModel,
+          vehiclePlate: service.vehiclePlate,
+          serviceStatus: status,
+          portalUrl,
+        },
+      });
+
+      if (error) {
+        console.error('WhatsApp notification error:', error);
+        return false;
+      }
+
+      console.log('WhatsApp notification sent:', data);
+      return true;
+    } catch (error) {
+      console.error('Failed to send WhatsApp notification:', error);
+      return false;
+    }
+  };
+
+  const updateStatus = async (id: string, newStatus: ServiceStatus, sendNotification: boolean = true) => {
+    const service = services.find(s => s.id === id);
+    
     try {
       const { error } = await supabase
         .from('services' as any)
@@ -221,11 +278,22 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
       if (error) throw error;
 
       // Optimistic update
-      setServices(prev => prev.map(service =>
-        service.id === id
-          ? { ...service, status: newStatus, updatedAt: new Date() }
-          : service
+      setServices(prev => prev.map(s =>
+        s.id === id
+          ? { ...s, status: newStatus, updatedAt: new Date() }
+          : s
       ));
+
+      // Send WhatsApp notification if enabled and workshop has phone configured
+      if (sendNotification && workshopPhone && service) {
+        const notificationSent = await sendWhatsAppNotification({ ...service, status: newStatus }, newStatus);
+        if (notificationSent) {
+          toast({
+            title: 'Notificación enviada',
+            description: `Se notificó a ${service.clientName} por WhatsApp`,
+          });
+        }
+      }
     } catch (error) {
       console.error('Error updating status:', error);
       toast({
@@ -401,12 +469,15 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
       services,
       loading,
       workshopId,
+      workshopPhone,
+      workshopName,
       addService,
       updateStatus,
       addDiagnosticReport,
       approveServices,
       getCounts,
       refreshServices,
+      sendWhatsAppNotification,
     }}>
       {children}
     </ServicesContext.Provider>

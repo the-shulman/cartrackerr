@@ -7,11 +7,12 @@ import { FilterTabs } from "@/components/FilterTabs";
 import { useServicesContext } from "@/contexts/ServicesContext";
 import { useBranding } from "@/hooks/useBranding";
 import { ServiceStatus } from "@/types/service";
-import { Inbox, Search, Wrench, CheckCircle } from "lucide-react";
+import { Inbox, Search, Wrench, CheckCircle, MessageCircle, AlertCircle } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const Index = () => {
-  const { services, addService, updateStatus, addDiagnosticReport, approveServices, getCounts } = useServicesContext();
+  const { services, addService, updateStatus, addDiagnosticReport, approveServices, getCounts, workshopPhone } = useServicesContext();
   const { branding, updateBranding, resetBranding } = useBranding();
   const [activeFilter, setActiveFilter] = useState<ServiceStatus | 'all'>('all');
   const [searchQuery, setSearchQuery] = useState("");
@@ -36,6 +37,23 @@ const Index = () => {
       />
       
       <main className="container mx-auto px-4 py-8">
+        {/* WhatsApp notification status */}
+        {workshopPhone ? (
+          <Alert className="mb-6 border-green-500/50 bg-green-500/10">
+            <MessageCircle className="h-4 w-4 text-green-600" />
+            <AlertDescription className="text-green-700 dark:text-green-400">
+              <strong>Notificaciones automáticas activas</strong> — Los clientes recibirán actualizaciones por WhatsApp al número {workshopPhone}
+            </AlertDescription>
+          </Alert>
+        ) : (
+          <Alert className="mb-6 border-yellow-500/50 bg-yellow-500/10">
+            <AlertCircle className="h-4 w-4 text-yellow-600" />
+            <AlertDescription className="text-yellow-700 dark:text-yellow-400">
+              <strong>Notificaciones desactivadas</strong> — Configura tu número de celular en ajustes para enviar WhatsApp automáticos
+            </AlertDescription>
+          </Alert>
+        )}
+
         {/* Stats Overview */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
           <StatsCard 
