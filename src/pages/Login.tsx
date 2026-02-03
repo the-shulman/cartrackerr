@@ -5,21 +5,58 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Car, Mail, Lock, Loader2 } from "lucide-react";
+import { Car, Mail, Lock, Loader2, Phone } from "lucide-react";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const Login = () => {
   const navigate = useNavigate();
   const { signIn } = useAuthContext();
   const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [loginMethod, setLoginMethod] = useState<"email" | "phone">("email");
+
+  const validatePhone = (value: string) => {
+    const digitsOnly = value.replace(/\D/g, "");
+    return digitsOnly.slice(0, 10);
+  };
+
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setPhone(validatePhone(e.target.value));
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
-    const { error } = await signIn(email, password);
+    let loginEmail = email;
+
+    // If logging in with phone, first get the email associated with the phone
+    if (loginMethod === "phone") {
+      if (phone.length !== 10) {
+        toast.error("El número de celular debe tener 10 dígitos");
+        setLoading(false);
+        return;
+      }
+
+      const { data: foundEmail, error: lookupError } = await supabase.rpc(
+        "get_email_by_phone",
+        { p_phone: phone }
+      );
+
+      if (lookupError || !foundEmail) {
+        toast.error("No se encontró una cuenta con ese número de teléfono");
+        setLoading(false);
+        return;
+      }
+
+      loginEmail = foundEmail;
+    }
+
+    const { error } = await signIn(loginEmail, password);
 
     if (error) {
       toast.error("Error al iniciar sesión: " + error.message);
@@ -49,23 +86,55 @@ const Login = () => {
         </CardHeader>
         <form onSubmit={handleSubmit}>
           <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="email">Correo Electrónico</Label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="tu@email.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="pl-9 h-12 text-base"
-                  required
-                  autoComplete="email"
-                  inputMode="email"
-                />
-              </div>
-            </div>
+            <Tabs value={loginMethod} onValueChange={(v) => setLoginMethod(v as "email" | "phone")}>
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="email" className="flex items-center gap-2">
+                  <Mail className="w-4 h-4" />
+                  Email
+                </TabsTrigger>
+                <TabsTrigger value="phone" className="flex items-center gap-2">
+                  <Phone className="w-4 h-4" />
+                  Teléfono
+                </TabsTrigger>
+              </TabsList>
+              <TabsContent value="email" className="space-y-2 mt-4">
+                <Label htmlFor="email">Correo Electrónico</Label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="tu@email.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="pl-9 h-12 text-base"
+                    required={loginMethod === "email"}
+                    autoComplete="email"
+                    inputMode="email"
+                  />
+                </div>
+              </TabsContent>
+              <TabsContent value="phone" className="space-y-2 mt-4">
+                <Label htmlFor="phone">Número de Celular</Label>
+                <div className="relative">
+                  <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input
+                    id="phone"
+                    type="tel"
+                    placeholder="5512345678"
+                    value={phone}
+                    onChange={handlePhoneChange}
+                    className="pl-9 h-12 text-base"
+                    required={loginMethod === "phone"}
+                    maxLength={10}
+                    inputMode="numeric"
+                  />
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  10 dígitos sin espacios ni guiones
+                </p>
+              </TabsContent>
+            </Tabs>
             <div className="space-y-2">
               <Label htmlFor="password">Contraseña</Label>
               <div className="relative">
