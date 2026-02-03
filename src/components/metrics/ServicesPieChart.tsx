@@ -16,21 +16,47 @@ const STATUS_LABELS: Record<string, string> = {
   delivered: "Entregado",
 };
 
+const SERVICE_TYPE_LABELS: Record<string, string> = {
+  oil_change: "Cambio de Aceite",
+  brake_service: "Servicio de Frenos",
+  tire_rotation: "Rotación de Llantas",
+  general_maintenance: "Mantenimiento General",
+  engine_repair: "Reparación de Motor",
+  transmission: "Transmisión",
+  electrical: "Eléctrico",
+  suspension: "Suspensión",
+  air_conditioning: "Aire Acondicionado",
+  diagnostics: "Diagnóstico",
+  other: "Otro",
+};
+
 const COLORS = [
   "hsl(var(--primary))",
   "hsl(var(--accent))",
-  "hsl(var(--warning))",
-  "hsl(var(--success))",
-  "hsl(var(--info))",
-  "hsl(var(--secondary))",
+  "hsl(var(--status-progress))",
+  "hsl(var(--status-ready))",
+  "hsl(var(--status-awaiting))",
+  "hsl(var(--status-diagnosing))",
+  "hsl(var(--status-received))",
+  "hsl(var(--status-delivered))",
 ];
 
 export function ServicesPieChart({ data, title, dataKey = "status" }: ServicesPieChartProps) {
-  const formattedData = data.map((item, index) => ({
-    name: dataKey === "status" ? (STATUS_LABELS[item.status] || item.status) : (item as any).type,
-    value: item.count,
-    fill: COLORS[index % COLORS.length],
-  }));
+  const formattedData = data.map((item, index) => {
+    let name: string;
+    if (dataKey === "status") {
+      name = STATUS_LABELS[item.status] || item.status;
+    } else {
+      // For type data, item.status actually contains the type value
+      name = SERVICE_TYPE_LABELS[item.status] || item.status;
+    }
+    
+    return {
+      name,
+      value: item.count,
+      fill: COLORS[index % COLORS.length],
+    };
+  });
 
   return (
     <Card>
@@ -50,6 +76,8 @@ export function ServicesPieChart({ data, title, dataKey = "status" }: ServicesPi
                   outerRadius={100}
                   paddingAngle={2}
                   dataKey="value"
+                  label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
+                  labelLine={false}
                 >
                   {formattedData.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={entry.fill} />
