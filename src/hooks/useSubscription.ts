@@ -101,6 +101,10 @@ export function useSubscription() {
         throw error;
       }
 
+      if (data?.error === "no_customer") {
+        throw new Error(data.message || "No tienes una suscripción activa.");
+      }
+
       if (data?.url) {
         window.open(data.url, "_blank");
       }
