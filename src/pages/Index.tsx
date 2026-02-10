@@ -10,6 +10,7 @@ import { ServiceStatus } from "@/types/service";
 import { Inbox, Search, Wrench, CheckCircle, MessageCircle, AlertCircle } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { OnboardingTutorial } from "@/components/OnboardingTutorial";
 
 const Index = () => {
   const { services, addService, updateStatus, addDiagnosticReport, approveServices, getCounts, workshopPhone } = useServicesContext();
@@ -30,7 +31,8 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <Header 
+      <OnboardingTutorial />
+      <Header
         branding={branding} 
         onUpdateBranding={updateBranding} 
         onResetBranding={resetBranding} 
