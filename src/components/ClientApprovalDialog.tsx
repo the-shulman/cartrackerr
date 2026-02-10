@@ -82,7 +82,7 @@ export function ClientApprovalDialog({ serviceId, vehicleInfo, report, onApprove
         <div className="space-y-6 py-4">
           <div className="bg-muted/50 p-4 rounded-lg">
             <p className="text-sm text-muted-foreground mb-1">
-              {report.createdAt ? `Reporte creado: ${format(new Date(report.createdAt), 'dd/MM/yyyy h:mm a')}` : 'Reporte de diagnóstico'}
+              {report.createdAt && !isNaN(new Date(report.createdAt).getTime()) ? `Reporte creado: ${format(new Date(report.createdAt), 'dd/MM/yyyy h:mm a')}` : 'Reporte de diagnóstico'}
             </p>
             <h4 className="font-medium mb-2">Hallazgos:</h4>
             <p className="text-sm">{report.findings}</p>
