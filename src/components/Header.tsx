@@ -1,9 +1,11 @@
-import { Wrench, LogOut, BarChart3 } from "lucide-react";
+import { Wrench, LogOut, BarChart3, Clock } from "lucide-react";
 import { BrandingConfig } from "@/types/branding";
 import { SettingsDialog } from "@/components/SettingsDialog";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { useAuthContext } from "@/contexts/AuthContext";
+import { useSubscription } from "@/hooks/useSubscription";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -16,6 +18,7 @@ interface HeaderProps {
 
 export function Header({ branding, onUpdateBranding, onResetBranding }: HeaderProps) {
   const { signOut, user } = useAuthContext();
+  const { isTrial, trialEnd } = useSubscription();
   const navigate = useNavigate();
 
   const handleSignOut = async () => {
@@ -47,6 +50,21 @@ export function Header({ branding, onUpdateBranding, onResetBranding }: HeaderPr
             <h1 className="text-lg md:text-2xl font-bold tracking-tight truncate">{branding.workshopName}</h1>
             <p className="text-xs md:text-sm text-primary-foreground/70 truncate">{branding.tagline}</p>
           </div>
+          {isTrial && (
+            <Badge 
+              variant="secondary" 
+              className="bg-yellow-500/20 text-yellow-200 border-yellow-500/30 hidden sm:flex items-center gap-1 cursor-pointer hover:bg-yellow-500/30"
+              onClick={() => navigate("/suscripcion")}
+            >
+              <Clock className="w-3 h-3" />
+              Prueba gratis
+              {trialEnd && (
+                <span className="text-yellow-300/80 text-xs">
+                  · {Math.max(0, Math.ceil((new Date(trialEnd).getTime() - Date.now()) / (1000 * 60 * 60 * 24)))} días
+                </span>
+              )}
+            </Badge>
+          )}
         </div>
         <div className="flex items-center gap-2">
           <Tooltip>
