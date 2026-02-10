@@ -64,9 +64,11 @@ export function useSubscription() {
     return () => clearInterval(interval);
   }, [user, checkSubscription]);
 
-  const openCheckout = async () => {
+  const openCheckout = async (plan: "monthly" | "annual" = "monthly") => {
     try {
-      const { data, error } = await supabase.functions.invoke("create-checkout");
+      const { data, error } = await supabase.functions.invoke("create-checkout", {
+        body: { plan },
+      });
       
       if (error) {
         console.error("Error creating checkout:", error);

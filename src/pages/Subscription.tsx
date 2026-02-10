@@ -1,18 +1,20 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Check, CreditCard, Shield, Loader2 } from "lucide-react";
+import { Check, CreditCard, Shield, Loader2, Star } from "lucide-react";
 import { useSubscription } from "@/hooks/useSubscription";
 import { toast } from "sonner";
+
+type PlanType = "monthly" | "annual";
 
 export default function Subscription() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { isSubscribed, isLoading, subscriptionEnd, openCheckout, openCustomerPortal, checkSubscription } = useSubscription();
+  const [selectedPlan, setSelectedPlan] = useState<PlanType>("annual");
 
-  // Handle subscription success/cancel from URL params
   useEffect(() => {
     const subscriptionStatus = searchParams.get("subscription");
     if (subscriptionStatus === "success") {
@@ -25,9 +27,9 @@ export default function Subscription() {
     }
   }, [searchParams, navigate, checkSubscription]);
 
-  const handleSubscribe = async () => {
+  const handleSubscribe = async (plan: PlanType) => {
     try {
-      await openCheckout();
+      await openCheckout(plan);
     } catch {
       toast.error("Error al iniciar el proceso de suscripción");
     }
@@ -60,9 +62,43 @@ export default function Subscription() {
     );
   }
 
+  if (isSubscribed) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-background to-muted/30 py-8 px-4">
+        <div className="container max-w-lg mx-auto">
+          <Card className="border-primary border-2 relative">
+            <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary">
+              Tu Plan Actual
+            </Badge>
+            <CardHeader className="text-center pb-2">
+              <CardTitle className="text-2xl">CarTrackerr Pro</CardTitle>
+              <CardDescription>Suscripción activa</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="text-center text-sm text-muted-foreground">
+                <Shield className="w-4 h-4 inline mr-1" />
+                Activa hasta:{" "}
+                {subscriptionEnd ? new Date(subscriptionEnd).toLocaleDateString("es-MX", {
+                  day: "numeric", month: "long", year: "numeric",
+                }) : "N/A"}
+              </div>
+              <Button variant="outline" className="w-full" onClick={handleManageSubscription}>
+                <CreditCard className="w-4 h-4 mr-2" />
+                Gestionar Suscripción
+              </Button>
+              <Button className="w-full" onClick={() => navigate("/")}>
+                Ir al Dashboard
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-muted/30 py-8 px-4">
-      <div className="container max-w-4xl mx-auto">
+      <div className="container max-w-5xl mx-auto">
         <div className="text-center mb-8">
           <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-2">
             CarTrackerr Pro
@@ -72,22 +108,70 @@ export default function Subscription() {
           </p>
         </div>
 
+        {/* Plan toggle */}
+        <div className="flex justify-center mb-8">
+          <div className="inline-flex items-center gap-2 rounded-full bg-muted p-1">
+            <button
+              onClick={() => setSelectedPlan("monthly")}
+              className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                selectedPlan === "monthly"
+                  ? "bg-background text-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              Mensual
+            </button>
+            <button
+              onClick={() => setSelectedPlan("annual")}
+              className={`px-4 py-2 rounded-full text-sm font-medium transition-colors flex items-center gap-1 ${
+                selectedPlan === "annual"
+                  ? "bg-background text-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              Anual
+              <Badge variant="secondary" className="text-xs bg-primary/10 text-primary">
+                -36%
+              </Badge>
+            </button>
+          </div>
+        </div>
+
         <div className="grid md:grid-cols-2 gap-6">
           {/* Plan Card */}
-          <Card className={`relative ${isSubscribed ? "border-primary border-2" : ""}`}>
-            {isSubscribed && (
-              <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary">
-                Tu Plan Actual
+          <Card className={`relative ${selectedPlan === "annual" ? "border-primary border-2" : ""}`}>
+            {selectedPlan === "annual" && (
+              <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary flex items-center gap-1">
+                <Star className="w-3 h-3" /> Mejor Valor
               </Badge>
             )}
             <CardHeader className="text-center pb-2">
-              <CardTitle className="text-2xl">Membresía Mensual</CardTitle>
+              <CardTitle className="text-2xl">
+                {selectedPlan === "monthly" ? "Membresía Mensual" : "Membresía Anual"}
+              </CardTitle>
               <CardDescription>Acceso completo a todas las funciones</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="text-center">
-                <span className="text-4xl font-bold text-primary">$2,600</span>
-                <span className="text-muted-foreground"> MXN/mes</span>
+                {selectedPlan === "monthly" ? (
+                  <>
+                    <span className="text-4xl font-bold text-primary">$2,600</span>
+                    <span className="text-muted-foreground"> MXN/mes</span>
+                  </>
+                ) : (
+                  <>
+                    <span className="text-4xl font-bold text-primary">$20,000</span>
+                    <span className="text-muted-foreground"> MXN/año</span>
+                    <div className="mt-1 text-sm text-muted-foreground">
+                      Equivale a <span className="font-semibold text-primary">$1,667/mes</span>
+                    </div>
+                    <div className="mt-1">
+                      <Badge variant="outline" className="text-primary border-primary">
+                        Ahorras $11,200 al año
+                      </Badge>
+                    </div>
+                  </>
+                )}
               </div>
 
               <ul className="space-y-3">
@@ -99,42 +183,14 @@ export default function Subscription() {
                 ))}
               </ul>
 
-              {isSubscribed ? (
-                <div className="space-y-3">
-                  <div className="text-center text-sm text-muted-foreground">
-                    <Shield className="w-4 h-4 inline mr-1" />
-                    Suscripción activa hasta:{" "}
-                    {subscriptionEnd ? new Date(subscriptionEnd).toLocaleDateString("es-MX", {
-                      day: "numeric",
-                      month: "long",
-                      year: "numeric",
-                    }) : "N/A"}
-                  </div>
-                  <Button 
-                    variant="outline" 
-                    className="w-full"
-                    onClick={handleManageSubscription}
-                  >
-                    <CreditCard className="w-4 h-4 mr-2" />
-                    Gestionar Suscripción
-                  </Button>
-                  <Button 
-                    className="w-full"
-                    onClick={() => navigate("/")}
-                  >
-                    Ir al Dashboard
-                  </Button>
-                </div>
-              ) : (
-                <Button 
-                  className="w-full" 
-                  size="lg"
-                  onClick={handleSubscribe}
-                >
-                  <CreditCard className="w-4 h-4 mr-2" />
-                  Suscribirse Ahora
-                </Button>
-              )}
+              <Button 
+                className="w-full" 
+                size="lg"
+                onClick={() => handleSubscribe(selectedPlan)}
+              >
+                <CreditCard className="w-4 h-4 mr-2" />
+                {selectedPlan === "annual" ? "Suscribirse Anual" : "Suscribirse Mensual"}
+              </Button>
             </CardContent>
           </Card>
 
