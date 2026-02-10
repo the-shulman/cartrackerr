@@ -42,18 +42,37 @@ const Login = () => {
         return;
       }
 
-      const { data: foundEmail, error: lookupError } = await supabase.rpc(
-        "get_email_by_phone",
-        { p_phone: phone }
+      // Use secure edge function for phone login - email never exposed to client
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/phone-login`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "apikey": import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+          },
+          body: JSON.stringify({ phone, password }),
+        }
       );
 
-      if (lookupError || !foundEmail) {
-        toast.error("No se encontró una cuenta con ese número de teléfono");
+      const result = await response.json();
+
+      if (!response.ok || !result.session) {
+        toast.error(result.error || "Credenciales inválidas");
         setLoading(false);
         return;
       }
 
-      loginEmail = foundEmail;
+      // Set the session returned by the edge function
+      await supabase.auth.setSession({
+        access_token: result.session.access_token,
+        refresh_token: result.session.refresh_token,
+      });
+
+      toast.success("¡Bienvenido de vuelta!");
+      navigate("/");
+      setLoading(false);
+      return;
     }
 
     const { error } = await signIn(loginEmail, password);
