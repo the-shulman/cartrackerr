@@ -191,6 +191,16 @@ export default function Subscription() {
                 <CreditCard className="w-4 h-4 mr-2" />
                 {selectedPlan === "annual" ? "Suscribirse Anual" : "Suscribirse Mensual"}
               </Button>
+
+              <p className="text-sm text-muted-foreground text-center">
+                ¿Ya tienes cuenta?{" "}
+                <button 
+                  onClick={() => navigate("/login")} 
+                  className="text-primary hover:underline font-medium"
+                >
+                  Iniciar Sesión
+                </button>
+              </p>
             </CardContent>
           </Card>
 
