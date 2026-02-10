@@ -55,8 +55,9 @@ serve(async (req) => {
     logStep("User authenticated", { userId: user.id, email: user.email });
 
     // Demo/whitelisted users - bypass subscription check
-    const WHITELISTED_EMAILS = ["shankynine@hotmail.com"];
-    if (WHITELISTED_EMAILS.includes(user.email.toLowerCase())) {
+    const whitelistEnv = Deno.env.get("WHITELISTED_EMAILS") ?? "";
+    const whitelistedEmails = whitelistEnv.split(",").map(e => e.trim().toLowerCase()).filter(Boolean);
+    if (whitelistedEmails.includes(user.email.toLowerCase())) {
       logStep("Whitelisted user - bypassing subscription check");
       return new Response(JSON.stringify({
         subscribed: true,
