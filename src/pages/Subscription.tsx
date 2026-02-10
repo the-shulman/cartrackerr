@@ -189,8 +189,11 @@ export default function Subscription() {
                 onClick={() => handleSubscribe(selectedPlan)}
               >
                 <CreditCard className="w-4 h-4 mr-2" />
-                {selectedPlan === "annual" ? "Suscribirse Anual" : "Suscribirse Mensual"}
+                Comenzar prueba gratis de 3 días
               </Button>
+              <p className="text-xs text-muted-foreground text-center">
+                Prueba gratis por 3 días. Se cobrará automáticamente al finalizar si no cancelas.
+              </p>
 
               <p className="text-sm text-muted-foreground text-center">
                 ¿Ya tienes cuenta?{" "}
