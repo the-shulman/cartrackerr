@@ -12,6 +12,9 @@ serve(async (req) => {
   }
 
   try {
+    const startTime = Date.now();
+    const MIN_RESPONSE_TIME_MS = 300; // Constant-time to prevent timing attacks
+
     const { phone, password } = await req.json();
 
     if (!phone || !password) {
@@ -33,6 +36,8 @@ serve(async (req) => {
     );
 
     if (rlError || !allowed) {
+      const elapsed = Date.now() - startTime;
+      if (elapsed < MIN_RESPONSE_TIME_MS) await new Promise(r => setTimeout(r, MIN_RESPONSE_TIME_MS - elapsed));
       return new Response(
         JSON.stringify({ error: "Demasiados intentos. Por favor espera unos minutos." }),
         { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -45,6 +50,14 @@ serve(async (req) => {
     );
 
     if (lookupError || !emailData) {
+      // Perform a dummy auth attempt to normalize timing regardless of phone existence
+      await supabaseAdmin.auth.signInWithPassword({
+        email: `invalid-${Date.now()}@noreply.local`,
+        password: "dummy-password-attempt",
+      }).catch(() => {});
+
+      const elapsed = Date.now() - startTime;
+      if (elapsed < MIN_RESPONSE_TIME_MS) await new Promise(r => setTimeout(r, MIN_RESPONSE_TIME_MS - elapsed));
       return new Response(
         JSON.stringify({ error: "Credenciales inválidas" }),
         { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -62,12 +75,16 @@ serve(async (req) => {
     });
 
     if (authError) {
+      const elapsed = Date.now() - startTime;
+      if (elapsed < MIN_RESPONSE_TIME_MS) await new Promise(r => setTimeout(r, MIN_RESPONSE_TIME_MS - elapsed));
       return new Response(
         JSON.stringify({ error: "Credenciales inválidas" }),
         { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
+    const elapsed = Date.now() - startTime;
+    if (elapsed < MIN_RESPONSE_TIME_MS) await new Promise(r => setTimeout(r, MIN_RESPONSE_TIME_MS - elapsed));
     return new Response(
       JSON.stringify({ session: authData.session }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
