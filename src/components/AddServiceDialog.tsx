@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { CheckCircle, Loader2 } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -39,6 +40,8 @@ const SERVICE_TYPES = [
 
 export function AddServiceDialog({ onAdd }: AddServiceDialogProps) {
   const [open, setOpen] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
   const [formData, setFormData] = useState({
     clientName: "",
     clientPhone: "",
@@ -50,20 +53,31 @@ export function AddServiceDialog({ onAdd }: AddServiceDialogProps) {
     description: "",
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    onAdd(formData);
-    setFormData({
-      clientName: "",
-      clientPhone: "",
-      vehicleBrand: "",
-      vehicleModel: "",
-      vehiclePlate: "",
-      vehicleYear: "",
-      serviceType: "",
-      description: "",
-    });
-    setOpen(false);
+    setSubmitting(true);
+    try {
+      await onAdd(formData);
+      setSubmitted(true);
+      // Show success state for 1.5 seconds before closing
+      setTimeout(() => {
+        setFormData({
+          clientName: "",
+          clientPhone: "",
+          vehicleBrand: "",
+          vehicleModel: "",
+          vehiclePlate: "",
+          vehicleYear: "",
+          serviceType: "",
+          description: "",
+        });
+        setSubmitted(false);
+        setSubmitting(false);
+        setOpen(false);
+      }, 1500);
+    } catch {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -187,14 +201,22 @@ export function AddServiceDialog({ onAdd }: AddServiceDialogProps) {
             />
           </div>
 
-          <div className="flex justify-end gap-3 pt-4">
-            <Button type="button" variant="outline" onClick={() => setOpen(false)}>
-              Cancelar
-            </Button>
-            <Button type="submit" className="gradient-accent text-accent-foreground">
-              Registrar Servicio
-            </Button>
-          </div>
+          {submitted ? (
+            <div className="flex flex-col items-center gap-2 py-4">
+              <CheckCircle className="h-10 w-10 text-status-ready animate-in zoom-in" />
+              <p className="text-sm font-medium text-status-ready">¡Servicio registrado!</p>
+            </div>
+          ) : (
+            <div className="flex justify-end gap-3 pt-4">
+              <Button type="button" variant="outline" onClick={() => setOpen(false)} disabled={submitting}>
+                Cancelar
+              </Button>
+              <Button type="submit" className="gradient-accent text-accent-foreground" disabled={submitting}>
+                {submitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+                {submitting ? "Registrando..." : "Registrar Servicio"}
+              </Button>
+            </div>
+          )}
         </form>
       </DialogContent>
     </Dialog>
