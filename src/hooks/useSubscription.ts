@@ -7,6 +7,8 @@ interface SubscriptionState {
   isLoading: boolean;
   subscriptionEnd: string | null;
   productId: string | null;
+  isTrial: boolean;
+  trialEnd: string | null;
 }
 
 export function useSubscription() {
@@ -16,6 +18,8 @@ export function useSubscription() {
     isLoading: true,
     subscriptionEnd: null,
     productId: null,
+    isTrial: false,
+    trialEnd: null,
   });
 
   const checkSubscription = useCallback(async () => {
@@ -25,6 +29,8 @@ export function useSubscription() {
         isLoading: false,
         subscriptionEnd: null,
         productId: null,
+        isTrial: false,
+        trialEnd: null,
       });
       return;
     }
@@ -45,6 +51,8 @@ export function useSubscription() {
         isLoading: false,
         subscriptionEnd: data.subscription_end ?? null,
         productId: data.product_id ?? null,
+        isTrial: data.is_trial ?? false,
+        trialEnd: data.trial_end ?? null,
       });
     } catch (err) {
       console.error("Error in checkSubscription:", err);
