@@ -18,6 +18,7 @@ const Login = lazy(() => import("./pages/Login"));
 const Register = lazy(() => import("./pages/Register"));
 const Metrics = lazy(() => import("./pages/Metrics"));
 const Subscription = lazy(() => import("./pages/Subscription"));
+const ManageSubscription = lazy(() => import("./pages/ManageSubscription"));
 const Landing = lazy(() => import("./pages/Landing"));
 
 const PageLoader = () => (
@@ -49,6 +50,14 @@ const App = () => (
                     element={
                       <ProtectedRoute requireSubscription={false}>
                         <Subscription />
+                      </ProtectedRoute>
+                    } 
+                  />
+                  <Route 
+                    path="/mi-suscripcion" 
+                    element={
+                      <ProtectedRoute requireSubscription={false}>
+                        <ManageSubscription />
                       </ProtectedRoute>
                     } 
                   />
