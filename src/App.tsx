@@ -18,6 +18,7 @@ const Login = lazy(() => import("./pages/Login"));
 const Register = lazy(() => import("./pages/Register"));
 const Metrics = lazy(() => import("./pages/Metrics"));
 const Subscription = lazy(() => import("./pages/Subscription"));
+const Landing = lazy(() => import("./pages/Landing"));
 
 const PageLoader = () => (
   <div className="min-h-screen bg-background flex items-center justify-center">
@@ -41,6 +42,7 @@ const App = () => (
                 <Routes>
                   <Route path="/login" element={<Login />} />
                   <Route path="/registro" element={<Register />} />
+                  <Route path="/landing" element={<Landing />} />
                   <Route path="/track" element={<ClientPortalPage />} />
                   <Route 
                     path="/suscripcion" 
