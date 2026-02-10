@@ -65,6 +65,20 @@ export function ClientPortal() {
     }
 
     try {
+      // Rate limit: 10 lookups per hour per phone+plate combo
+      const { data: allowed } = await supabase.rpc('check_rate_limit', {
+        p_identifier: `${normalizedPhone}_${normalizedPlate}`,
+        p_attempt_type: 'portal_lookup',
+        p_max_attempts: 10,
+        p_window_minutes: 60,
+      });
+
+      if (!allowed) {
+        setError('Demasiados intentos. Por favor espera unos minutos antes de intentar de nuevo.');
+        setSearching(false);
+        return;
+      }
+
       // Use the new RPC function to get full service history
       // @ts-ignore - RPC function exists but types aren't generated yet
       const response = await supabase.rpc('get_client_service_history', {

@@ -21,11 +21,23 @@ serve(async (req) => {
       );
     }
 
-    // Use service role to look up email by phone - never exposed to client
     const supabaseAdmin = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
+
+    // Rate limit: 5 attempts per 15 minutes per phone
+    const { data: allowed, error: rlError } = await supabaseAdmin.rpc(
+      "check_rate_limit",
+      { p_identifier: phone, p_attempt_type: "phone_login", p_max_attempts: 5, p_window_minutes: 15 }
+    );
+
+    if (rlError || !allowed) {
+      return new Response(
+        JSON.stringify({ error: "Demasiados intentos. Por favor espera unos minutos." }),
+        { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
 
     const { data: emailData, error: lookupError } = await supabaseAdmin.rpc(
       "get_email_by_phone",
@@ -33,14 +45,12 @@ serve(async (req) => {
     );
 
     if (lookupError || !emailData) {
-      // Generic error to prevent phone enumeration
       return new Response(
         JSON.stringify({ error: "Credenciales inválidas" }),
         { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // Sign in with the resolved email - using anon client so we get a proper session
     const supabaseAnon = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_ANON_KEY")!

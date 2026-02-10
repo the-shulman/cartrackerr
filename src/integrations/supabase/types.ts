@@ -68,6 +68,27 @@ export type Database = {
           },
         ]
       }
+      rate_limit_log: {
+        Row: {
+          attempt_type: string
+          attempted_at: string
+          id: string
+          identifier: string
+        }
+        Insert: {
+          attempt_type: string
+          attempted_at?: string
+          id?: string
+          identifier: string
+        }
+        Update: {
+          attempt_type?: string
+          attempted_at?: string
+          id?: string
+          identifier?: string
+        }
+        Relationships: []
+      }
       services: {
         Row: {
           client_name: string
@@ -177,6 +198,15 @@ export type Database = {
           p_service_id: string
         }
         Returns: Json
+      }
+      check_rate_limit: {
+        Args: {
+          p_attempt_type: string
+          p_identifier: string
+          p_max_attempts?: number
+          p_window_minutes?: number
+        }
+        Returns: boolean
       }
       get_client_service_history: {
         Args: { p_phone: string; p_plate: string }
