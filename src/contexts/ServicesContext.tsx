@@ -17,6 +17,7 @@ interface ServicesContextType {
   workshopPhone: string | null;
   workshopName: string | null;
   addService: (serviceData: Omit<Service, 'id' | 'createdAt' | 'updatedAt' | 'status'>) => Promise<void>;
+  deleteService: (id: string) => Promise<void>;
   updateStatus: (id: string, newStatus: ServiceStatus, sendNotification?: boolean) => Promise<void>;
   addDiagnosticReport: (id: string, report: DiagnosticReport, nextMaintenanceDate?: Date) => Promise<void>;
   approveServices: (id: string, approvedItemIds: string[], clientNotes?: string) => Promise<void>;
@@ -227,6 +228,31 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
       toast({
         title: 'Error',
         description: 'No se pudo registrar el servicio',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const deleteService = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('services' as any)
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+
+      setServices(prev => prev.filter(s => s.id !== id));
+
+      toast({
+        title: 'Servicio eliminado',
+        description: 'El servicio fue eliminado correctamente',
+      });
+    } catch (error) {
+      console.error('Error deleting service:', error);
+      toast({
+        title: 'Error',
+        description: 'No se pudo eliminar el servicio',
         variant: 'destructive',
       });
     }
@@ -478,6 +504,7 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
       workshopPhone,
       workshopName,
       addService,
+      deleteService,
       updateStatus,
       addDiagnosticReport,
       approveServices,

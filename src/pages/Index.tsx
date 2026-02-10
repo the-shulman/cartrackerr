@@ -13,7 +13,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { OnboardingTutorial } from "@/components/OnboardingTutorial";
 
 const Index = () => {
-  const { services, addService, updateStatus, addDiagnosticReport, approveServices, getCounts, workshopPhone } = useServicesContext();
+  const { services, addService, deleteService, updateStatus, addDiagnosticReport, approveServices, getCounts, workshopPhone } = useServicesContext();
   const { branding, updateBranding, resetBranding } = useBranding();
   const [activeFilter, setActiveFilter] = useState<ServiceStatus | 'all'>('all');
   const [searchQuery, setSearchQuery] = useState("");
@@ -117,6 +117,7 @@ const Index = () => {
                 onStatusChange={updateStatus}
                 onAddDiagnosticReport={addDiagnosticReport}
                 onApproveServices={approveServices}
+                onDelete={deleteService}
               />
             ))}
           </div>

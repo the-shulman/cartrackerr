@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Service, DiagnosticReport } from "@/types/service";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { StatusBadge } from "./StatusBadge";
@@ -5,20 +6,33 @@ import { StatusProgress } from "./StatusProgress";
 import { DiagnosticReportDialog } from "./DiagnosticReportDialog";
 import { ClientApprovalDialog } from "./ClientApprovalDialog";
 import { DownloadQuoteButton } from "./DownloadQuoteButton";
-import { Car, Phone, User, Calendar, Wrench, CheckCircle2, Image, MessageCircle } from "lucide-react";
+import { Car, Phone, User, Calendar, Wrench, CheckCircle2, Image, MessageCircle, Trash2 } from "lucide-react";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { buildWhatsAppLink, openWhatsAppLink } from "@/lib/whatsapp";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 interface ServiceCardProps {
   service: Service;
   onStatusChange: (id: string, status: Service['status']) => void;
   onAddDiagnosticReport: (id: string, report: DiagnosticReport) => void;
   onApproveServices: (id: string, approvedItemIds: string[], clientNotes?: string) => void;
+  onDelete: (id: string) => void;
 }
 
-export function ServiceCard({ service, onStatusChange, onAddDiagnosticReport, onApproveServices }: ServiceCardProps) {
+export function ServiceCard({ service, onStatusChange, onAddDiagnosticReport, onApproveServices, onDelete }: ServiceCardProps) {
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const vehicleInfo = `${service.vehicleBrand} ${service.vehicleModel} (${service.vehiclePlate})`;
   
   const approvedTotal = service.diagnosticReport?.items
@@ -69,7 +83,33 @@ Ingresa con:
               {service.vehiclePlate} • {service.vehicleYear}
             </p>
           </div>
-          <StatusBadge status={service.status} />
+          <div className="flex items-center gap-2">
+            <StatusBadge status={service.status} />
+            <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+              <AlertDialogTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-destructive">
+                  <Trash2 className="w-4 h-4" />
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>¿Eliminar servicio?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Se eliminará el servicio de {service.vehicleBrand} {service.vehicleModel} ({service.vehiclePlate}) para {service.clientName}. Esta acción no se puede deshacer.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                  <AlertDialogAction
+                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                    onClick={() => onDelete(service.id)}
+                  >
+                    Eliminar
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </div>
         </div>
       </CardHeader>
       <CardContent className="space-y-4 px-4 md:px-6">
