@@ -1,4 +1,4 @@
-import { Wrench, LogOut, BarChart3, Clock } from "lucide-react";
+import { Wrench, LogOut, BarChart3, Clock, CreditCard } from "lucide-react";
 import { BrandingConfig } from "@/types/branding";
 import { SettingsDialog } from "@/components/SettingsDialog";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -67,6 +67,19 @@ export function Header({ branding, onUpdateBranding, onResetBranding }: HeaderPr
           )}
         </div>
         <div className="flex items-center gap-2">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => navigate("/mi-suscripcion")}
+                className="text-primary-foreground hover:bg-primary-foreground/10"
+              >
+                <CreditCard className="w-5 h-5" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Mi Suscripción</TooltipContent>
+          </Tooltip>
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
