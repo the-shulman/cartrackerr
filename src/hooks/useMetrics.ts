@@ -65,24 +65,31 @@ export function useMetrics() {
 
       if (metricsError) throw metricsError;
 
-      // Parse the response with safe defaults
+      // Parse the response — RPC returns snake_case keys
+      // and services_by_status/type as objects {key: count}, not arrays
       const raw = data as Record<string, unknown> | null;
+
+      // Convert {status: count} object to [{status, count}] array
+      const statusObj = (raw?.services_by_status ?? {}) as Record<string, number>;
+      const servicesByStatus = Object.entries(statusObj).map(([status, count]) => ({ status, count }));
+
+      // Convert {type: count} object to [{type, count}] array
+      const typeObj = (raw?.services_by_type ?? {}) as Record<string, number>;
+      const servicesByType = Object.entries(typeObj).map(([type, count]) => ({ type, count }));
+
+      const dailyRaw = raw?.daily_revenue;
+      const dailyRevenue = Array.isArray(dailyRaw) ? dailyRaw as WorkshopMetrics["dailyRevenue"] : [];
+
       const metricsData: WorkshopMetrics = {
-        totalServices: Number(raw?.totalServices ?? raw?.totalservices ?? 0),
-        completedServices: Number(raw?.completedServices ?? raw?.completedservices ?? 0),
-        pendingServices: Number(raw?.pendingServices ?? raw?.pendingservices ?? 0),
-        totalRevenue: Number(raw?.totalRevenue ?? raw?.totalrevenue ?? 0),
-        avgServiceTimeHours: Number(raw?.avgServiceTimeHours ?? raw?.avgservicetimehours ?? 0),
-        recurringClients: Number(raw?.recurringClients ?? raw?.recurringclients ?? 0),
-        servicesByStatus: Array.isArray(raw?.servicesByStatus ?? raw?.servicesbystatus)
-          ? (raw?.servicesByStatus ?? raw?.servicesbystatus) as WorkshopMetrics["servicesByStatus"]
-          : [],
-        servicesByType: Array.isArray(raw?.servicesByType ?? raw?.servicesbytype)
-          ? (raw?.servicesByType ?? raw?.servicesbytype) as WorkshopMetrics["servicesByType"]
-          : [],
-        dailyRevenue: Array.isArray(raw?.dailyRevenue ?? raw?.dailyrevenue)
-          ? (raw?.dailyRevenue ?? raw?.dailyrevenue) as WorkshopMetrics["dailyRevenue"]
-          : [],
+        totalServices: Number(raw?.total_services ?? 0),
+        completedServices: Number(raw?.completed_services ?? 0),
+        pendingServices: Number(raw?.pending_services ?? 0),
+        totalRevenue: Number(raw?.total_revenue ?? 0),
+        avgServiceTimeHours: Number(raw?.avg_service_time_hours ?? 0),
+        recurringClients: 0, // Not returned by RPC currently
+        servicesByStatus,
+        servicesByType,
+        dailyRevenue,
       };
       setMetrics(metricsData);
     } catch (err: unknown) {
