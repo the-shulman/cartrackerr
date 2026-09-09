@@ -37,9 +37,10 @@ export function StatusProgress({ currentStatus }: StatusProgressProps) {
               </div>
               <span
                 className={cn(
-                  "mt-1 md:mt-2 text-[9px] md:text-xs text-center max-w-[45px] md:max-w-[60px] leading-tight truncate",
+                  "mt-1 md:mt-2 text-[9px] md:text-xs text-center max-w-[56px] md:max-w-[72px] leading-tight line-clamp-2 break-words",
                   isCurrent ? "text-foreground font-medium" : "text-muted-foreground"
                 )}
+                title={STATUS_LABELS[status]}
               >
                 {STATUS_LABELS[status]}
               </span>

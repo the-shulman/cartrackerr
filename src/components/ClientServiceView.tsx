@@ -172,7 +172,7 @@ export function ClientServiceView({ service, onApprove, onBack, showHistoryButto
             <div>
               <h4 className="font-medium mb-2">Hallazgos</h4>
               <p className="text-sm text-muted-foreground bg-muted/50 p-3 rounded-lg whitespace-pre-wrap">
-                {report.findings}
+                {report.findings?.trim() ? report.findings : "Sin hallazgos registrados."}
               </p>
             </div>
 

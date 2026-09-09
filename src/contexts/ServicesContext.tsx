@@ -48,6 +48,15 @@ interface ServiceRow {
   updated_at: string;
 }
 
+// Safely parse a date value that may be missing, malformed, or already a Date.
+// Falls back to `fallback` (or now) instead of producing an Invalid Date that
+// later throws "Invalid time value" when something calls .toISOString() on it.
+function safeDate(value: unknown, fallback?: Date): Date {
+  if (!value) return fallback ?? new Date();
+  const d = new Date(value as string | number | Date);
+  return isNaN(d.getTime()) ? (fallback ?? new Date()) : d;
+}
+
 // Helper to convert database row to Service type
 function dbRowToService(row: ServiceRow): Service {
   return {
@@ -61,15 +70,18 @@ function dbRowToService(row: ServiceRow): Service {
     serviceType: row.service_type,
     description: row.description || '',
     status: row.status as ServiceStatus,
-    createdAt: new Date(row.created_at),
-    updatedAt: new Date(row.updated_at),
-    estimatedCompletion: row.estimated_completion ? new Date(row.estimated_completion) : undefined,
+    createdAt: safeDate(row.created_at),
+    updatedAt: safeDate(row.updated_at),
+    estimatedCompletion: row.estimated_completion ? safeDate(row.estimated_completion) : undefined,
     diagnosticReport: row.diagnostic_report ? {
-      findings: row.diagnostic_report.findings,
+      findings: row.diagnostic_report.findings || '',
       items: row.diagnostic_report.items || [],
       images: row.diagnostic_report.images,
-      createdAt: new Date(row.diagnostic_report.createdAt),
-      approvedAt: row.diagnostic_report.approvedAt ? new Date(row.diagnostic_report.approvedAt) : undefined,
+      // Fall back to the service's own createdAt if the report is missing/has an invalid date
+      // (older records saved before this field was always set), so downstream .toISOString()
+      // calls (e.g. PDF quote generation) never throw "Invalid time value".
+      createdAt: safeDate(row.diagnostic_report.createdAt, safeDate(row.created_at)),
+      approvedAt: row.diagnostic_report.approvedAt ? safeDate(row.diagnostic_report.approvedAt) : undefined,
       clientNotes: row.diagnostic_report.clientNotes,
     } : undefined,
   };

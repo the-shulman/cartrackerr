@@ -53,16 +53,20 @@ export function ServiceCard({ service, onStatusChange, onAddDiagnosticReport, on
 
   const handleOpenWhatsApp = () => {
     const portalUrl = `${window.location.origin}/track`;
-    const message = `¡Hola ${service.clientName}! 🚗
+    // Note: plain-text markers instead of emoji on purpose — WhatsApp's own
+    // wa.me -> api.whatsapp.com redirect has been observed corrupting multi-byte
+    // emoji into replacement characters ("�") for some recipients. Plain text
+    // is guaranteed to survive that hop.
+    const message = `¡Hola ${service.clientName}!
 
 Te contactamos respecto a tu vehículo ${service.vehicleBrand} ${service.vehicleModel} (${service.vehiclePlate}).
 
-📋 Puedes consultar el estado de tu servicio en:
+Puedes consultar el estado de tu servicio en:
 ${portalUrl}
 
 Ingresa con:
-📱 Teléfono: ${service.clientPhone}
-🚘 Placa: ${service.vehiclePlate}`;
+- Teléfono: ${service.clientPhone}
+- Placa: ${service.vehiclePlate}`;
 
     const link = buildWhatsAppLink(service.clientPhone, message);
     openWhatsAppLink(link);
@@ -75,7 +79,10 @@ Ingresa con:
           <div className="space-y-1 min-w-0 flex-1">
             <div className="flex items-center gap-2">
               <Car className="w-5 h-5 text-accent flex-shrink-0" />
-              <h3 className="font-semibold text-base md:text-lg truncate">
+              <h3
+                className="font-semibold text-base md:text-lg line-clamp-2 break-words"
+                title={`${service.vehicleBrand} ${service.vehicleModel}`}
+              >
                 {service.vehicleBrand} {service.vehicleModel}
               </h3>
             </div>

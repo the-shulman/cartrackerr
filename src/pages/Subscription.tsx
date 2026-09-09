@@ -75,13 +75,15 @@ export default function Subscription() {
               <CardDescription>Suscripción activa</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="text-center text-sm text-muted-foreground">
-                <Shield className="w-4 h-4 inline mr-1" />
-                Activa hasta:{" "}
-                {subscriptionEnd ? new Date(subscriptionEnd).toLocaleDateString("es-MX", {
-                  day: "numeric", month: "long", year: "numeric",
-                }) : "N/A"}
-              </div>
+              {subscriptionEnd && (
+                <div className="text-center text-sm text-muted-foreground">
+                  <Shield className="w-4 h-4 inline mr-1" />
+                  Activa hasta:{" "}
+                  {new Date(subscriptionEnd).toLocaleDateString("es-MX", {
+                    day: "numeric", month: "long", year: "numeric",
+                  })}
+                </div>
+              )}
               <Button variant="outline" className="w-full" onClick={handleManageSubscription}>
                 <CreditCard className="w-4 h-4 mr-2" />
                 Gestionar Suscripción

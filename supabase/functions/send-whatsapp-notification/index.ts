@@ -17,25 +17,29 @@ interface NotificationRequest {
   portalUrl: string;
 }
 
-// Status-specific message templates
+// Status-specific message templates.
+// Note: plain-text markers instead of emoji on purpose — WhatsApp's own
+// wa.me -> api.whatsapp.com redirect has been observed corrupting multi-byte
+// emoji into replacement characters ("�") for some recipients. Plain text
+// is guaranteed to survive delivery via Twilio and any client-side redirect.
 const STATUS_MESSAGES: Record<string, (name: string, vehicle: string, plate: string, url: string) => string> = {
   received: (name, vehicle, plate, url) => 
-    `¡Hola ${name}! 🚗\n\nTu vehículo ha sido recibido en nuestro taller:\n\n🚙 ${vehicle}\n📋 Placas: ${plate}\n\nTe mantendremos informado sobre el progreso. Puedes consultar el estado en:\n${url}`,
+    `¡Hola ${name}!\n\nTu vehículo ha sido recibido en nuestro taller:\n\n${vehicle}\nPlacas: ${plate}\n\nTe mantendremos informado sobre el progreso. Puedes consultar el estado en:\n${url}`,
   
   diagnosing: (name, vehicle, plate, url) => 
-    `¡Hola ${name}! 🔧\n\nEstamos diagnosticando tu vehículo:\n\n🚙 ${vehicle}\n📋 Placas: ${plate}\n\nTe notificaremos cuando tengamos el reporte listo. Consulta el estado en:\n${url}`,
+    `¡Hola ${name}!\n\nEstamos diagnosticando tu vehículo:\n\n${vehicle}\nPlacas: ${plate}\n\nTe notificaremos cuando tengamos el reporte listo. Consulta el estado en:\n${url}`,
   
   awaiting_approval: (name, vehicle, plate, url) => 
-    `¡Hola ${name}! 📋\n\nEl diagnóstico de tu vehículo está listo:\n\n🚙 ${vehicle}\n📋 Placas: ${plate}\n\n✅ Por favor revisa y aprueba los servicios recomendados:\n${url}\n\n¡Responde a este mensaje si tienes preguntas!`,
+    `¡Hola ${name}!\n\nEl diagnóstico de tu vehículo está listo:\n\n${vehicle}\nPlacas: ${plate}\n\nPor favor revisa y aprueba los servicios recomendados:\n${url}\n\n¡Responde a este mensaje si tienes preguntas!`,
   
   in_progress: (name, vehicle, plate, url) => 
-    `¡Hola ${name}! ⚙️\n\nYa comenzamos a trabajar en tu vehículo:\n\n🚙 ${vehicle}\n📋 Placas: ${plate}\n\nTe avisaremos cuando esté listo. Consulta el progreso en:\n${url}`,
+    `¡Hola ${name}!\n\nYa comenzamos a trabajar en tu vehículo:\n\n${vehicle}\nPlacas: ${plate}\n\nTe avisaremos cuando esté listo. Consulta el progreso en:\n${url}`,
   
   ready: (name, vehicle, plate, url) => 
-    `¡Hola ${name}! 🎉\n\n¡Tu vehículo está listo para recoger!\n\n🚙 ${vehicle}\n📋 Placas: ${plate}\n\n📍 Te esperamos en el taller.\n\nDetalles del servicio:\n${url}`,
+    `¡Hola ${name}!\n\n¡Tu vehículo está listo para recoger!\n\n${vehicle}\nPlacas: ${plate}\n\nTe esperamos en el taller.\n\nDetalles del servicio:\n${url}`,
   
   delivered: (name, vehicle, plate, url) => 
-    `¡Hola ${name}! 🙏\n\n¡Gracias por confiar en nosotros!\n\n🚙 ${vehicle}\n📋 Placas: ${plate}\n\nEsperamos verte pronto. Consulta tu historial en:\n${url}`,
+    `¡Hola ${name}!\n\n¡Gracias por confiar en nosotros!\n\n${vehicle}\nPlacas: ${plate}\n\nEsperamos verte pronto. Consulta tu historial en:\n${url}`,
 };
 
 // Allowed country codes for phone number validation (E.164 format)

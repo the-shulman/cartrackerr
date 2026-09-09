@@ -31,7 +31,15 @@ export function DownloadQuoteButton({
     setLoading(true);
     try {
       const portalUrl = `${window.location.origin}/track`;
-      
+
+      // Guard against a missing/invalid diagnosticReport.createdAt so this never
+      // throws "Invalid time value" — fall back to the current time if needed.
+      const reportCreatedAt = service.diagnosticReport.createdAt;
+      const createdAtIso =
+        reportCreatedAt instanceof Date && !isNaN(reportCreatedAt.getTime())
+          ? reportCreatedAt.toISOString()
+          : new Date().toISOString();
+
       const { data, error } = await supabase.functions.invoke('generate-pdf-quote', {
         body: {
           workshopName: branding.workshopName,
@@ -43,9 +51,9 @@ export function DownloadQuoteButton({
           vehiclePlate: service.vehiclePlate,
           vehicleYear: service.vehicleYear,
           serviceType: service.serviceType,
-          findings: service.diagnosticReport.findings,
+          findings: service.diagnosticReport.findings || 'Sin hallazgos registrados.',
           items: service.diagnosticReport.items,
-          createdAt: service.diagnosticReport.createdAt.toISOString(),
+          createdAt: createdAtIso,
           portalUrl,
         },
       });
