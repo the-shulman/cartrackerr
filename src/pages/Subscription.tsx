@@ -38,8 +38,8 @@ export default function Subscription() {
   const handleManageSubscription = async () => {
     try {
       await openCustomerPortal();
-    } catch {
-      toast.error("Error al abrir el portal de gestión");
+    } catch (err: any) {
+      toast.error(err?.message || "Error al abrir el portal de gestión");
     }
   };
 
