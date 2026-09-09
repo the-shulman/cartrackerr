@@ -118,7 +118,7 @@ export function SettingsDialog({ branding, onUpdate, onReset }: SettingsDialogPr
           <Settings className="w-5 h-5" />
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Perfil del Taller</DialogTitle>
           <DialogDescription>

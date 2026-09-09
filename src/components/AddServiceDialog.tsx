@@ -88,7 +88,7 @@ export function AddServiceDialog({ onAdd }: AddServiceDialogProps) {
           Nuevo Servicio
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[500px] gradient-card">
+      <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto gradient-card">
         <DialogHeader>
           <DialogTitle className="text-xl">Registrar Nuevo Servicio</DialogTitle>
         </DialogHeader>
