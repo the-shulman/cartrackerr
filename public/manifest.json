@@ -1,6 +1,6 @@
 {
-  "name": "AutoTrack - Workshop Service Manager",
-  "short_name": "AutoTrack",
+  "name": "CarTrackerr - Workshop Service Manager",
+  "short_name": "CarTrackerr",
   "description": "Track vehicle service status and manage workshop operations",
   "start_url": "/",
   "display": "standalone",

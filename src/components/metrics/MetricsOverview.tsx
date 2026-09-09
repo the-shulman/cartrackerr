@@ -4,8 +4,7 @@ import {
   CheckCircle, 
   Clock, 
   DollarSign, 
-  Timer, 
-  Users 
+  Timer 
 } from "lucide-react";
 import { WorkshopMetrics } from "@/hooks/useMetrics";
 
@@ -50,13 +49,6 @@ export function MetricsOverview({ metrics }: MetricsOverviewProps) {
       icon: Timer,
       color: "text-status-diagnosing",
       bgColor: "bg-status-diagnosing/10",
-    },
-    {
-      title: "Clientes Recurrentes",
-      value: metrics.recurringClients,
-      icon: Users,
-      color: "text-status-awaiting",
-      bgColor: "bg-status-awaiting/10",
     },
   ];
 

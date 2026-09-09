@@ -53,7 +53,7 @@ export function SettingsDialog({ branding, onUpdate, onReset }: SettingsDialogPr
 
       // Update workshop in database
       const updateData: { workshop_name: string; phone?: string } = {
-        workshop_name: workshopName.trim() || "AutoTrack",
+        workshop_name: workshopName.trim() || "CarTrackerr",
       };
 
       // Only update phone if it's been modified (not empty or different from current)
@@ -75,7 +75,7 @@ export function SettingsDialog({ branding, onUpdate, onReset }: SettingsDialogPr
 
       // Update local branding
       onUpdate({
-        workshopName: workshopName.trim() || "AutoTrack",
+        workshopName: workshopName.trim() || "CarTrackerr",
         tagline: tagline.trim() || "Workshop Service Manager",
         logoUrl: logoUrl.trim() || undefined,
       });
@@ -95,7 +95,7 @@ export function SettingsDialog({ branding, onUpdate, onReset }: SettingsDialogPr
 
   const handleReset = () => {
     onReset();
-    setWorkshopName("AutoTrack");
+    setWorkshopName("CarTrackerr");
     setTagline("Workshop Service Manager");
     setLogoUrl("");
     setPhone("");

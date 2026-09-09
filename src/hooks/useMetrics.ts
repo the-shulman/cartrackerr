@@ -9,7 +9,6 @@ export interface WorkshopMetrics {
   pendingServices: number;
   totalRevenue: number;
   avgServiceTimeHours: number;
-  recurringClients: number;
   servicesByStatus: { status: string; count: number }[];
   servicesByType: { type: string; count: number }[];
   dailyRevenue: { date: string; revenue: number }[];
@@ -86,7 +85,6 @@ export function useMetrics() {
         pendingServices: Number(raw?.pending_services ?? 0),
         totalRevenue: Number(raw?.total_revenue ?? 0),
         avgServiceTimeHours: Number(raw?.avg_service_time_hours ?? 0),
-        recurringClients: 0, // Not returned by RPC currently
         servicesByStatus,
         servicesByType,
         dailyRevenue,

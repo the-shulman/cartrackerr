@@ -44,7 +44,7 @@ export function InstallPrompt() {
             </div>
             <div className="flex-1 min-w-0">
               <h3 className="font-semibold text-foreground text-sm">
-                Instalar AutoTrack
+                Instalar CarTrackerr
               </h3>
               <p className="text-xs text-muted-foreground mt-1">
                 Accede más rápido desde tu pantalla de inicio

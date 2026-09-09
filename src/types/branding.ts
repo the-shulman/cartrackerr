@@ -5,6 +5,6 @@ export interface BrandingConfig {
 }
 
 export const DEFAULT_BRANDING: BrandingConfig = {
-  workshopName: "AutoTrack",
+  workshopName: "CarTrackerr",
   tagline: "Workshop Service Manager",
 };

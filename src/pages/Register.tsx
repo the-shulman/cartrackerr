@@ -51,7 +51,7 @@ const Register = () => {
       return;
     }
 
-    toast.success("¡Cuenta creada exitosamente! Bienvenido a AutoTrack");
+    toast.success("¡Cuenta creada exitosamente! Bienvenido a CarTrackerr");
     navigate("/");
   };
 
