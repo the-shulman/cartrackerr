@@ -11,6 +11,15 @@ import { Car, Phone, Search, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
+// Safely parse a date value that may be missing or malformed, mirroring the
+// guard in ServicesContext.tsx — avoids producing an Invalid Date that later
+// throws "Invalid time value" (e.g. in quote PDF generation) or renders oddly.
+function safeDate(value: unknown, fallback?: Date): Date {
+  if (!value) return fallback ?? new Date();
+  const d = new Date(value as string | number | Date);
+  return isNaN(d.getTime()) ? (fallback ?? new Date()) : d;
+}
+
 // Helper to convert database response to Service type
 function dbResponseToService(data: any): Service {
   return {
@@ -24,15 +33,15 @@ function dbResponseToService(data: any): Service {
     serviceType: data.service_type,
     description: data.description || '',
     status: data.status as ServiceStatus,
-    createdAt: new Date(data.created_at),
-    updatedAt: new Date(data.updated_at),
-    estimatedCompletion: data.estimated_completion ? new Date(data.estimated_completion) : undefined,
+    createdAt: safeDate(data.created_at),
+    updatedAt: safeDate(data.updated_at),
+    estimatedCompletion: data.estimated_completion ? safeDate(data.estimated_completion) : undefined,
     diagnosticReport: data.diagnostic_report ? {
-      findings: data.diagnostic_report.findings,
+      findings: data.diagnostic_report.findings || '',
       items: data.diagnostic_report.items || [],
       images: data.diagnostic_report.images,
-      createdAt: new Date(data.diagnostic_report.createdAt),
-      approvedAt: data.diagnostic_report.approvedAt ? new Date(data.diagnostic_report.approvedAt) : undefined,
+      createdAt: safeDate(data.diagnostic_report.createdAt, safeDate(data.created_at)),
+      approvedAt: data.diagnostic_report.approvedAt ? safeDate(data.diagnostic_report.approvedAt) : undefined,
       clientNotes: data.diagnostic_report.clientNotes,
     } : undefined,
   };

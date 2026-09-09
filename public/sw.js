@@ -1,4 +1,4 @@
-const CACHE_NAME = 'autotrack-v1';
+const CACHE_NAME = 'cartrackerr-v1';
 const STATIC_ASSETS = [
   '/',
   '/index.html',

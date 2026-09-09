@@ -14,7 +14,6 @@ import {
   Smartphone,
   Shield,
   ArrowRight,
-  Star,
   Zap,
   Clock,
 } from "lucide-react";
@@ -208,21 +207,6 @@ export default function Landing() {
               </div>
             ))}
           </div>
-        </div>
-      </section>
-
-      {/* Social proof */}
-      <section className="py-20 px-4">
-        <div className="container mx-auto max-w-3xl text-center">
-          <div className="flex justify-center gap-1 mb-4">
-            {[...Array(5)].map((_, i) => (
-              <Star key={i} className="w-6 h-6 fill-yellow-400 text-yellow-400" />
-            ))}
-          </div>
-          <blockquote className="text-xl md:text-2xl font-medium italic mb-4">
-            "Mis clientes ahora confían más en mi taller porque pueden ver todo el proceso desde su celular. Ya no tengo que llamar para pedir aprobaciones."
-          </blockquote>
-          <p className="text-muted-foreground">— Taller mecánico en Guadalajara</p>
         </div>
       </section>
 
